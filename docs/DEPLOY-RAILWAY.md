@@ -60,9 +60,16 @@ O nome do banco (`railway` ou `maylove`) vem do plugin; as migrations criam as t
 Push em `staging`/`main` ou redeploy manual. Migrations pendentes rodam em dois momentos:
 
 1. **Pre-deploy** (`preDeployCommand` no `railway.toml`)
-2. **Start** (`start-web.sh`, antes do servidor PHP)
+2. **Start** (`start-web.sh`, em background após o PHP bindar na `PORT`)
 
-Comando usado: `doctrine:migrations:migrate --no-interaction --allow-no-migration` (só aplica o que falta).
+O servidor sobe **antes** das migrations no start para o Railway healthcheck não receber 502.
+
+Healthcheck do Railway: `GET /api/v1/health/live` (liveness, sempre 200).  
+Monitoramento completo: `GET /api/v1/health` (pode retornar 503 se Redis/DB/storage falharem).
+
+### Porta no Railway
+
+O app escuta em `0.0.0.0:$PORT` (variável injetada pelo Railway). Em **Settings → Networking**, o target port do domínio deve ser a mesma `PORT` (geralmente automático). Ver [Application Failed to Respond](https://docs.railway.com/networking/troubleshooting/application-failed-to-respond).
 
 ## Erro comum
 
