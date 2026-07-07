@@ -20,8 +20,8 @@ RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --opti
 COPY . .
 RUN composer dump-autoload --optimize --classmap-authoritative
 
-COPY docker/entrypoint.sh docker/start-web.sh docker/start-worker.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/start-web.sh /usr/local/bin/start-worker.sh
+COPY docker/entrypoint.sh docker/start-web.sh docker/start-worker.sh docker/pre-deploy.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/start-web.sh /usr/local/bin/start-worker.sh /usr/local/bin/pre-deploy.sh
 
 ENV PORT=8080
 EXPOSE 8080
