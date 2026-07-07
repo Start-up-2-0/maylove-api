@@ -75,7 +75,9 @@ php bin/console doctrine:migrations:migrate --no-interaction
 
 **Causa:** `APP_ENV` ausente, vazia ou com valor errado (ex.: `production`). O Symfony cai em modo `dev` e procura `.env`, que não está na imagem.
 
-**Correção:** no Railway → Variables → `APP_ENV` = `prod` (literalmente). Configure no Railway, não no Dockerfile.
+**Correção:** no Railway → Variables → `APP_ENV` = `prod` (literalmente).
+
+**Nota técnica:** o Symfony Runtime lê `APP_ENV` só de `$_SERVER`/`$_ENV`, não de `getenv()`. A imagem inclui `docker/symfony-railway-env.php`, que copia as variáveis injetadas pelo Railway para esses superglobals antes do bootstrap.
 
 ## Secrets GitHub
 
