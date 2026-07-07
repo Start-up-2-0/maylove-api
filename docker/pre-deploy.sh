@@ -1,6 +1,29 @@
 #!/bin/sh
 set -e
 
+if [ "${APP_ENV}" != "prod" ]; then
+  echo ""
+  echo "ERROR: APP_ENV deve ser exatamente \"prod\" (valor atual: \"${APP_ENV:-<vazio>}\")."
+  echo ""
+  echo "No Railway → serviço maylove-api → Variables:"
+  echo "  APP_ENV = prod"
+  echo ""
+  echo "Valores como \"production\" ou variável vazia fazem o Symfony usar modo dev"
+  echo "e tentar ler /app/.env, que não existe na imagem Docker."
+  echo ""
+  exit 1
+fi
+
+if [ -z "${APP_SECRET}" ]; then
+  echo ""
+  echo "ERROR: APP_SECRET não está definida."
+  echo ""
+  echo "No Railway → serviço maylove-api → Variables:"
+  echo "  APP_SECRET = <string aleatória longa>"
+  echo ""
+  exit 1
+fi
+
 if [ -z "${DATABASE_URL}" ]; then
   echo ""
   echo "ERROR: DATABASE_URL não está definida."

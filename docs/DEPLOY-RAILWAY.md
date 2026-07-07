@@ -45,7 +45,7 @@ O nome do banco (`railway` ou `maylove`) vem do plugin; as migrations criam as t
 
 | Variável | Como preencher |
 |----------|----------------|
-| `APP_ENV` | `prod` |
+| `APP_ENV` | exatamente `prod` (não use `production` nem deixe vazio) |
 | `APP_SECRET` | gere um valor aleatório longo |
 | `REDIS_URL` | referência → Redis → `REDIS_URL` ou `REDIS_PRIVATE_URL` |
 | `MESSENGER_TRANSPORT_DSN` | `${REDIS_URL}/messages` — ex.: `redis://default:pass@redis.railway.internal:6379/messages` |
@@ -70,6 +70,12 @@ php bin/console doctrine:migrations:migrate --no-interaction
 **Causa:** serviço API sem `DATABASE_URL`, ou MySQL não existe no environment.
 
 **Correção:** passos 1 e 2 acima. A variável deve estar no serviço **maylove-api**, não só no plugin MySQL.
+
+> Symfony tenta carregar `/app/.env` no pre-deploy
+
+**Causa:** `APP_ENV` ausente, vazia ou com valor errado (ex.: `production`). O Symfony cai em modo `dev` e procura `.env`, que não está na imagem.
+
+**Correção:** no Railway → Variables → `APP_ENV` = `prod` (literalmente). Configure no Railway, não no Dockerfile.
 
 ## Secrets GitHub
 
