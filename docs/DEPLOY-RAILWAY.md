@@ -77,7 +77,7 @@ php bin/console doctrine:migrations:migrate --no-interaction
 
 **Correção:** no Railway → Variables → `APP_ENV` = `prod` (literalmente).
 
-**Nota técnica:** o Symfony Runtime lê `APP_ENV` só de `$_SERVER`/`$_ENV`, não de `getenv()`. A imagem inclui `docker/symfony-railway-env.php`, que copia as variáveis injetadas pelo Railway para esses superglobals antes do bootstrap.
+**Nota técnica:** sem `.env` na imagem Docker, `config/bootstrap-runtime.php` desabilita o Dotenv e copia as variáveis do Railway (`/proc/self/environ`) para `$_SERVER`/`$_ENV` antes do Symfony subir.
 
 ## Secrets GitHub
 
