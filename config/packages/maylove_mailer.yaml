@@ -1,0 +1,4 @@
+parameters:
+    mail.enabled: '%env(bool:default:false:MAIL_ENABLED)%'
+    mail.from: '%env(default::MAIL_FROM)%'
+    mail.frontend_url: '%env(APP_URL)%'

@@ -1,0 +1,105 @@
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Kernel.php'
+            - '../src/Infrastructure/Security/MayLoveUser.php'
+
+    App\Infrastructure\Storage\StorageApiClient:
+        arguments:
+            $storageApiUrl: '%storage.api_url%'
+
+    App\Application\Music\MusicTrackUrlResolver:
+        arguments:
+            $storagePublicUrl: '%storage.public_url%'
+
+    App\Infrastructure\Payment\MercadoPagoClient:
+        arguments:
+            $accessToken: '%mercadopago.access_token%'
+            $apiBaseUrl: '%mercadopago.api_base%'
+
+    App\Infrastructure\Payment\MercadoPagoWebhookSignatureValidator:
+        arguments:
+            $webhookSecret: '%mercadopago.webhook_secret%'
+
+    App\Application\Billing\SubscriptionService:
+        arguments:
+            $frontendUrl: '%app.url%'
+            $notificationUrl: '%mercadopago.notification_url%'
+
+    App\Application\Billing\OrderCheckoutService:
+        arguments:
+            $frontendUrl: '%app.url%'
+            $notificationUrl: '%mercadopago.notification_url%'
+
+    App\UI\Http\Controller\Web\MercadoPagoWebhookController:
+        arguments:
+            $webhookSignatureRequired: '%mercadopago.webhook_signature_required%'
+
+    App\Infrastructure\Security\HmacTokenCodec:
+        arguments:
+            $secret: '%storage.service_token_secret%'
+
+    App\Infrastructure\Security\MayLoveServiceTokenService:
+        arguments:
+            $ttlSeconds: 300
+
+    App\Infrastructure\Security\MayLoveTokenService:
+        arguments:
+            $tokenSalt: '%auth.token_salt%'
+            $sessionMinutes: '%auth.session_minutes%'
+            $refreshTokenDays: '%auth.refresh_token_days%'
+
+    App\Application\Auth\AuthSessionService:
+        arguments:
+            $maxLoginAttempts: '%auth.max_login_attempts%'
+            $validateIpOnToken: '%auth.validate_ip_on_token%'
+            $validateUserAgentOnToken: '%auth.validate_user_agent_on_token%'
+
+    App\Application\Auth\AuthService:
+        arguments:
+            $maxLoginAttempts: '%auth.max_login_attempts%'
+            $lockoutMinutes: '%auth.lockout_minutes%'
+
+    App\Infrastructure\Security\MayLoveTokenAuthenticator:
+        arguments:
+            $tokenHeaderName: '%auth.token_header_name%'
+            $slidingRenewalMinutes: '%auth.sliding_renewal_minutes%'
+
+    App\UI\Http\Controller\AuthController:
+        arguments:
+            $cookieSecure: '%auth.cookie_secure%'
+            $tokenHeaderName: '%auth.token_header_name%'
+
+    App\Infrastructure\Email\ResendEmailGateway:
+        arguments:
+            $enabled: '%mail.enabled%'
+            $from: '%mail.from%'
+
+    App\Application\User\EmailVerificationService:
+        arguments:
+            $frontendUrl: '%mail.frontend_url%'
+            $verificationHours: '%auth.email_verification_hours%'
+
+    App\Application\User\VerificationResendRateLimitService:
+        arguments:
+            $maxPerHour: '%auth.email_resend_max_per_hour%'
+
+    App\UI\Http\Controller\Web\PublicTributePageController:
+        arguments:
+            $frontendUrl: '%app.url%'
+
+    App\Application\Tribute\TributePublishedDispatcher:
+        arguments:
+            $appUrl: '%app.url%'
+
+    Predis\Client:
+        arguments:
+            - '%env(REDIS_URL)%'

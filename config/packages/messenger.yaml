@@ -1,0 +1,27 @@
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            failed: 'doctrine://default?queue_name=failed'
+            sync: 'sync://'
+
+        routing:
+            App\Infrastructure\Messenger\Message\SendVerificationEmailMessage: async
+            App\Infrastructure\Messenger\Message\SendWelcomeEmailMessage: async
+            App\Infrastructure\Messenger\Message\SendPublishedEmailMessage: async
+            App\Infrastructure\Messenger\Message\GenerateOgImageMessage: async
+            App\Infrastructure\Messenger\Message\RecordTributeViewMessage: async
+            App\Infrastructure\Messenger\Message\ProcessMercadoPagoWebhookMessage: async
+
+when@dev:
+    framework:
+        messenger:
+            routing:
+                App\Infrastructure\Messenger\Message\SendVerificationEmailMessage: sync
+                App\Infrastructure\Messenger\Message\SendWelcomeEmailMessage: sync
+                App\Infrastructure\Messenger\Message\SendPublishedEmailMessage: sync
+                App\Infrastructure\Messenger\Message\GenerateOgImageMessage: sync
+                App\Infrastructure\Messenger\Message\RecordTributeViewMessage: sync
+                App\Infrastructure\Messenger\Message\ProcessMercadoPagoWebhookMessage: sync

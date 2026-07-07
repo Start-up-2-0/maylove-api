@@ -1,0 +1,5 @@
+api:
+    resource: routes/api.yaml
+
+web:
+    resource: routes/web.yaml

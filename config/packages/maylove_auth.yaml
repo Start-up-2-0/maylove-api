@@ -1,0 +1,13 @@
+parameters:
+    auth.token_salt: '%env(AUTH_TOKEN_SALT)%'
+    auth.token_header_name: '%env(AUTH_TOKEN_HEADER_NAME)%'
+    auth.session_minutes: '%env(int:AUTH_SESSION_MINUTES)%'
+    auth.refresh_token_days: '%env(int:AUTH_REFRESH_TOKEN_DAYS)%'
+    auth.sliding_renewal_minutes: '%env(int:AUTH_SLIDING_RENEWAL_MINUTES)%'
+    auth.max_login_attempts: '%env(int:AUTH_MAX_LOGIN_ATTEMPTS)%'
+    auth.lockout_minutes: '%env(int:AUTH_LOCKOUT_MINUTES)%'
+    auth.validate_ip_on_token: false
+    auth.validate_user_agent_on_token: false
+    auth.cookie_secure: '%env(bool:default::AUTH_COOKIE_SECURE)%'
+    auth.email_verification_hours: '%env(int:AUTH_EMAIL_VERIFICATION_HOURS)%'
+    auth.email_resend_max_per_hour: 3
