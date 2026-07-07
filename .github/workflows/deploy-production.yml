@@ -1,0 +1,35 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: railway-production-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-web:
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy API web (production)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: railway up --detach --ci
+
+  deploy-worker:
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    needs: deploy-web
+    if: vars.RAILWAY_WORKER_SERVICE_ID_PRODUCTION != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy API worker (production)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: railway up --detach --ci --service "${{ vars.RAILWAY_WORKER_SERVICE_ID_PRODUCTION }}"
