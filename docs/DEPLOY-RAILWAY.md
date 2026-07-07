@@ -57,11 +57,12 @@ O nome do banco (`railway` ou `maylove`) vem do plugin; as migrations criam as t
 
 ### 4. Só então fazer deploy
 
-Push em `staging`/`main` ou redeploy manual. O pre-deploy executa:
+Push em `staging`/`main` ou redeploy manual. Migrations pendentes rodam em dois momentos:
 
-```bash
-php bin/console doctrine:migrations:migrate --no-interaction
-```
+1. **Pre-deploy** (`preDeployCommand` no `railway.toml`)
+2. **Start** (`start-web.sh`, antes do servidor PHP)
+
+Comando usado: `doctrine:migrations:migrate --no-interaction --allow-no-migration` (só aplica o que falta).
 
 ## Erro comum
 
