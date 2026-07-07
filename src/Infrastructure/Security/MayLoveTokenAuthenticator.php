@@ -15,8 +15,9 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 
-final class MayLoveTokenAuthenticator extends AbstractAuthenticator
+final class MayLoveTokenAuthenticator extends AbstractAuthenticator implements AuthenticationEntryPointInterface
 {
     public function __construct(
         private readonly AuthSessionService $authSessionService,
@@ -76,16 +77,35 @@ final class MayLoveTokenAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        $previous = $exception->getPrevious();
-        if ($previous instanceof AuthException) {
-            return new JsonResponse([
-                'message' => $previous->getMessage(),
-                'code' => $previous->getErrorCode(),
-            ], $previous->getStatusCode());
+        return $this->createUnauthorizedResponse($exception);
+    }
+
+    public function start(Request $request, ?AuthenticationException $authException = null): Response
+    {
+        return $this->createUnauthorizedResponse($authException);
+    }
+
+    private function createUnauthorizedResponse(?AuthenticationException $exception): JsonResponse
+    {
+        if ($exception !== null) {
+            $previous = $exception->getPrevious();
+            if ($previous instanceof AuthException) {
+                return new JsonResponse([
+                    'message' => $previous->getMessage(),
+                    'code' => $previous->getErrorCode(),
+                ], $previous->getStatusCode());
+            }
+
+            if ($exception->getMessage() !== '') {
+                return new JsonResponse([
+                    'message' => $exception->getMessage(),
+                    'code' => 'UNAUTHORIZED',
+                ], Response::HTTP_UNAUTHORIZED);
+            }
         }
 
         return new JsonResponse([
-            'message' => $exception->getMessage() ?: 'Não autorizado.',
+            'message' => 'Não autorizado.',
             'code' => 'UNAUTHORIZED',
         ], Response::HTTP_UNAUTHORIZED);
     }
@@ -93,7 +113,7 @@ final class MayLoveTokenAuthenticator extends AbstractAuthenticator
     private function isPublicPath(string $path): bool
     {
         return (bool) preg_match(
-            '#^/api/v1/(health|auth/login|auth/refresh|auth/register|auth/verify-email|tribute-types|templates|billing/product|music-tracks|public/tributes)(/|$)#',
+            '#^/api/v1/(health(?:/.*)?|auth/login|auth/refresh|auth/register|auth/verify-email|tribute-types|templates|billing/product|music-tracks|public/tributes)(/|$)#',
             $path,
         );
     }
