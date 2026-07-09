@@ -33,7 +33,12 @@ final class RegisterUserService
         $user->setPasswordHash($this->passwordHasher->hashPassword($user, $password));
 
         $this->userRepository->save($user);
-        $this->emailVerificationService->sendVerificationEmail($user);
+
+        try {
+            $this->emailVerificationService->sendVerificationEmail($user);
+        } catch (\Throwable) {
+            // Cadastro não deve falhar se o envio assíncrono/e-mail estiver indisponível.
+        }
 
         return $user;
     }

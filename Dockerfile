@@ -3,7 +3,7 @@ FROM php:8.2-cli-alpine
 RUN apk add --no-cache \
         icu-dev \
         oniguruma-dev \
-    && docker-php-ext-install -j"$(nproc)" intl pdo pdo_mysql opcache
+    && docker-php-ext-install -j"$(nproc)" intl mbstring pdo pdo_mysql opcache
 
 COPY docker/php-railway.ini /usr/local/etc/php/conf.d/99-railway.ini
 
