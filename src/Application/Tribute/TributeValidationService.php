@@ -32,23 +32,38 @@ final class TributeValidationService
             $errors[] = $this->issue('honoree_name', 'REQUIRED', 'Nome do homenageado é obrigatório.');
         }
 
+        $content = $tribute->getContentJson();
         $message = trim(strip_tags((string) $tribute->getMessage()));
-        if (mb_strlen($message) < 10) {
+        $presentation = is_string($content['presentation'] ?? null) ? $content['presentation'] : null;
+        $requirements = $this->schemaProvider->requirementsFor($presentation);
+
+        if (!$requirements['usesMoments'] && mb_strlen($message) < 10) {
             $errors[] = $this->issue('message', 'MIN_LENGTH', 'A mensagem deve ter pelo menos 10 caracteres.');
         }
 
         // Requisitos de mídia dependem do estilo de apresentação escolhido: alguns
         // (ex.: Carta Simples) tornam fotos opcionais; layouts narrativos usam
         // "Momentos" e aceitam fotos ou momentos.
-        $content = $tribute->getContentJson();
-        $presentation = is_string($content['presentation'] ?? null) ? $content['presentation'] : null;
-        $requirements = $this->schemaProvider->requirementsFor($presentation);
         $photoCount = $this->mediaRepository->countActiveByTributeAndType($tribute, TributeMediaType::Photo);
-        $momentCount = is_array($content['timeline'] ?? null) ? count($content['timeline']) : 0;
 
         if ($requirements['usesMoments']) {
-            if ($photoCount < 1 && $momentCount < 1) {
-                $errors[] = $this->issue('moments', 'MIN_MOMENTS', 'Adicione ao menos um momento ou uma foto.');
+            $filledMoments = 0;
+            if (is_array($content['timeline'] ?? null)) {
+                foreach ($content['timeline'] as $item) {
+                    if (!is_array($item)) {
+                        continue;
+                    }
+                    $title = isset($item['title']) && is_string($item['title']) ? trim($item['title']) : '';
+                    $description = isset($item['description']) && is_string($item['description'])
+                        ? trim(strip_tags($item['description']))
+                        : '';
+                    if ($title !== '' || $description !== '') {
+                        ++$filledMoments;
+                    }
+                }
+            }
+            if ($filledMoments < 1 && $photoCount < 1) {
+                $errors[] = $this->issue('moments', 'MIN_MOMENTS', 'Adicione ao menos um trecho com texto ou uma foto.');
             }
         } elseif ($requirements['minPhotos'] > 0 && $photoCount < $requirements['minPhotos']) {
             $errors[] = $this->issue(

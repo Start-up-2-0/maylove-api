@@ -34,7 +34,7 @@ final class PresentationSchemaProvider
     ];
 
     /** Layouts narrativos/foto-centrados usam o editor de "Momentos". */
-    private const MOMENT_LAYOUTS = ['timeline', 'album', 'storytelling', 'cinematic', 'proposal'];
+    private const MOMENT_LAYOUTS = ['envelope', 'timeline', 'album', 'storytelling', 'cinematic', 'proposal'];
 
     /** Mínimo de fotos recomendado por layout (0 = opcional). */
     private const MIN_PHOTOS = [
@@ -102,6 +102,8 @@ final class PresentationSchemaProvider
             'dramatic' => (bool) ($p['dramatic'] ?? false),
         ];
 
+        $usesMoments = in_array($layout, self::MOMENT_LAYOUTS, true);
+
         return [
             'id' => (string) $p['id'],
             'label' => (string) $p['label'],
@@ -115,7 +117,7 @@ final class PresentationSchemaProvider
                 'minPhotos' => self::MIN_PHOTOS[$layout] ?? 1,
                 'maxPhotos' => null,
             ],
-            'required' => ['title', 'message'],
+            'required' => $usesMoments ? ['title'] : ['title', 'message'],
         ];
     }
 
@@ -161,7 +163,7 @@ final class PresentationSchemaProvider
                 'id' => 'carta-animada', 'label' => 'Carta Animada', 'emoji' => '✉️',
                 'description' => 'Uma carta que conta uma história, com envelope e digitação.',
                 'layout' => 'envelope', 'music' => true,
-                'highlights' => ['Envelope que abre', 'Texto surgindo aos poucos', 'Fotos entre os parágrafos'],
+                'highlights' => ['Envelope que abre', 'Trechos com digitação', 'Fotos entre os textos'],
             ],
             [
                 'id' => 'slider-fotos', 'label' => 'Slider de Fotos', 'emoji' => '🎞️',
