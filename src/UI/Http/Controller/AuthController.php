@@ -44,13 +44,15 @@ final class AuthController extends AbstractController
         /** @var array{name?: string, email?: string, password?: string, accept_terms?: bool} $payload */
         $payload = json_decode($request->getContent(), true) ?? [];
 
-        $violations = $this->validator->validate($payload, new Assert\Collection([
-            'name' => [new Assert\NotBlank(), new Assert\Length(min: 2, max: 120)],
-            'email' => [new Assert\NotBlank(), new Assert\Email()],
-            'password' => [new Assert\NotBlank(), new Assert\Length(min: 8, max: 128)],
-            'accept_terms' => [new Assert\IsTrue(message: 'É necessário aceitar os termos.')],
-            'allowExtraFields' => true,
-        ]));
+        $violations = $this->validator->validate($payload, new Assert\Collection(
+            fields: [
+                'name' => [new Assert\NotBlank(), new Assert\Length(min: 2, max: 120)],
+                'email' => [new Assert\NotBlank(), new Assert\Email()],
+                'password' => [new Assert\NotBlank(), new Assert\Length(min: 8, max: 128)],
+                'accept_terms' => [new Assert\IsTrue(message: 'É necessário aceitar os termos.')],
+            ],
+            allowExtraFields: true,
+        ));
 
         if (count($violations) > 0) {
             return ApiResponse::error('Dados inválidos.', 'VALIDATION_ERROR', Response::HTTP_BAD_REQUEST);
