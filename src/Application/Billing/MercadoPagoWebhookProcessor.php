@@ -8,6 +8,7 @@ use App\Domain\Billing\PaymentStatus;
 use App\Domain\Billing\ProductBillingMode;
 use App\Domain\Billing\SubscriptionStatus;
 use App\Domain\Tribute\BillingModeUsed;
+use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Payment\MercadoPagoClient;
 use App\Infrastructure\Persistence\Entity\Billing\Payment;
 use App\Infrastructure\Persistence\Entity\Billing\PaymentEvent;
@@ -15,7 +16,6 @@ use App\Infrastructure\Persistence\Repository\Billing\OrderRepository;
 use App\Infrastructure\Persistence\Repository\Billing\PaymentEventRepository;
 use App\Infrastructure\Persistence\Repository\Billing\PaymentRepository;
 use App\Infrastructure\Persistence\Repository\Billing\UserSubscriptionRepository;
-use Symfony\Component\Uid\Uuid;
 
 final class MercadoPagoWebhookProcessor
 {
@@ -139,11 +139,11 @@ final class MercadoPagoWebhookProcessor
         array $paymentData,
     ): void {
         $subscriptionId = substr($externalReference, strlen('subscription:'));
-        if (!Uuid::isValid($subscriptionId)) {
+        if (!UuidValue::isValid($subscriptionId)) {
             return;
         }
 
-        $subscription = $this->subscriptionRepository->find(Uuid::fromString($subscriptionId));
+        $subscription = $this->subscriptionRepository->find(UuidValue::fromString($subscriptionId));
         if ($subscription === null) {
             return;
         }
@@ -195,14 +195,14 @@ final class MercadoPagoWebhookProcessor
         }
 
         $subscriptionId = substr($externalReference, strlen('subscription:'));
-        if (!Uuid::isValid($subscriptionId)) {
+        if (!UuidValue::isValid($subscriptionId)) {
             $event->markProcessed();
             $this->paymentEventRepository->save($event);
 
             return;
         }
 
-        $subscription = $this->subscriptionRepository->find(Uuid::fromString($subscriptionId));
+        $subscription = $this->subscriptionRepository->find(UuidValue::fromString($subscriptionId));
         if ($subscription === null) {
             $event->markProcessed();
             $this->paymentEventRepository->save($event);

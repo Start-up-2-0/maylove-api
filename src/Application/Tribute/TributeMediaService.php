@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Tribute;
 
 use App\Application\Billing\PendingOrderInvalidationService;
+use App\Domain\Shared\UuidValue;
 use App\Domain\Tribute\Exception\TributeException;
 use App\Domain\Tribute\MusicSource;
 use App\Domain\Tribute\TributeMediaType;
@@ -13,7 +14,6 @@ use App\Infrastructure\Persistence\Entity\TributeMedia;
 use App\Infrastructure\Persistence\Entity\User;
 use App\Infrastructure\Persistence\Repository\TributeMediaRepository;
 use App\Infrastructure\Storage\StorageApiClient;
-use Symfony\Component\Uid\Uuid;
 
 final class TributeMediaService
 {
@@ -110,11 +110,11 @@ final class TributeMediaService
     {
         $this->assertEditable($tribute);
 
-        if (!Uuid::isValid($mediaId)) {
+        if (!UuidValue::isValid($mediaId)) {
             throw new TributeException('Mídia não encontrada.', 'MEDIA_NOT_FOUND', 404);
         }
 
-        $media = $this->mediaRepository->findActiveByIdAndTribute(Uuid::fromString($mediaId), $tribute);
+        $media = $this->mediaRepository->findActiveByIdAndTribute(UuidValue::fromString($mediaId), $tribute);
         if ($media === null) {
             throw new TributeException('Mídia não encontrada.', 'MEDIA_NOT_FOUND', 404);
         }
@@ -145,11 +145,11 @@ final class TributeMediaService
     {
         $this->assertEditable($tribute);
 
-        if (!Uuid::isValid($mediaId)) {
+        if (!UuidValue::isValid($mediaId)) {
             throw new TributeException('Mídia não encontrada.', 'MEDIA_NOT_FOUND', 404);
         }
 
-        $media = $this->mediaRepository->findActiveByIdAndTribute(Uuid::fromString($mediaId), $tribute);
+        $media = $this->mediaRepository->findActiveByIdAndTribute(UuidValue::fromString($mediaId), $tribute);
         if ($media === null) {
             throw new TributeException('Mídia não encontrada.', 'MEDIA_NOT_FOUND', 404);
         }

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Application\Catalog;
 
+use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Persistence\Entity\Catalog\Template;
 use App\Infrastructure\Persistence\Entity\Catalog\TributeType;
 use App\Infrastructure\Persistence\Repository\Catalog\TemplateRepository;
 use App\Infrastructure\Persistence\Repository\Catalog\TributeTypeRepository;
-use Symfony\Component\Uid\Uuid;
 
 final class CatalogQueryService
 {
@@ -28,11 +28,11 @@ final class CatalogQueryService
 
     public function getTributeType(string $id): ?TributeType
     {
-        if (!Uuid::isValid($id)) {
+        if (!UuidValue::isValid($id)) {
             return null;
         }
 
-        return $this->tributeTypeRepository->findActiveById(Uuid::fromString($id));
+        return $this->tributeTypeRepository->findActiveById(UuidValue::fromString($id));
     }
 
     /**
@@ -42,11 +42,11 @@ final class CatalogQueryService
     {
         $typeUuid = null;
         if ($tributeTypeId !== null && $tributeTypeId !== '') {
-            if (!Uuid::isValid($tributeTypeId)) {
+            if (!UuidValue::isValid($tributeTypeId)) {
                 return [];
             }
 
-            $typeUuid = Uuid::fromString($tributeTypeId);
+            $typeUuid = UuidValue::fromString($tributeTypeId);
             if ($this->tributeTypeRepository->findActiveById($typeUuid) === null) {
                 return [];
             }
@@ -57,10 +57,10 @@ final class CatalogQueryService
 
     public function getTemplate(string $id): ?Template
     {
-        if (!Uuid::isValid($id)) {
+        if (!UuidValue::isValid($id)) {
             return null;
         }
 
-        return $this->templateRepository->findActiveById(Uuid::fromString($id));
+        return $this->templateRepository->findActiveById(UuidValue::fromString($id));
     }
 }

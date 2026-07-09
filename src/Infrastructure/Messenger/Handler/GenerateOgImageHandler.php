@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Messenger\Handler;
 
+use App\Domain\Shared\UuidValue;
 use App\Domain\Tribute\TributeMediaType;
 use App\Domain\Tribute\TributeStatus;
 use App\Infrastructure\Messenger\Message\GenerateOgImageMessage;
@@ -12,7 +13,6 @@ use App\Infrastructure\Persistence\Repository\TributeRepository;
 use App\Infrastructure\Storage\StorageApiClient;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Uid\Uuid;
 
 #[AsMessageHandler]
 final class GenerateOgImageHandler
@@ -27,11 +27,11 @@ final class GenerateOgImageHandler
 
     public function __invoke(GenerateOgImageMessage $message): void
     {
-        if (!Uuid::isValid($message->tributeId)) {
+        if (!UuidValue::isValid($message->tributeId)) {
             return;
         }
 
-        $tribute = $this->tributeRepository->find(Uuid::fromString($message->tributeId));
+        $tribute = $this->tributeRepository->find(UuidValue::fromString($message->tributeId));
         if ($tribute === null || $tribute->getStatus() !== TributeStatus::Published) {
             return;
         }

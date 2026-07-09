@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\Music;
 
+use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Persistence\Entity\Music\MusicTrack;
 use App\Infrastructure\Persistence\Repository\Music\MusicTrackRepository;
-use Symfony\Component\Uid\Uuid;
 
 final class MusicTrackQueryService
 {
@@ -34,10 +34,10 @@ final class MusicTrackQueryService
 
     public function getActiveById(string $id): ?MusicTrack
     {
-        if (!Uuid::isValid($id)) {
+        if (!UuidValue::isValid($id)) {
             return null;
         }
 
-        return $this->musicTrackRepository->findActiveById(Uuid::fromString($id));
+        return $this->musicTrackRepository->findActiveById(UuidValue::fromString($id));
     }
 }

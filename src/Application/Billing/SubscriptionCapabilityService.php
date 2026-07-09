@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Billing;
 
+use App\Domain\Shared\UuidValue;
 use App\Domain\Tribute\BillingModeUsed;
 use App\Infrastructure\Persistence\Entity\Billing\UserSubscription;
 use App\Infrastructure\Persistence\Repository\Billing\UserSubscriptionRepository;
-use Symfony\Component\Uid\Uuid;
 
 final class SubscriptionCapabilityService
 {
@@ -53,11 +53,11 @@ final class SubscriptionCapabilityService
 
     private function resolveActiveSubscription(string $userId): ?UserSubscription
     {
-        if (!Uuid::isValid($userId)) {
+        if (!UuidValue::isValid($userId)) {
             return null;
         }
 
-        $subscription = $this->subscriptionRepository->findByUserId(Uuid::fromString($userId));
+        $subscription = $this->subscriptionRepository->findByUserId(UuidValue::fromString($userId));
         if ($subscription === null || !$subscription->hasActiveBenefit()) {
             return null;
         }

@@ -7,6 +7,7 @@ namespace App\Application\Billing;
 use App\Domain\Billing\Exception\BillingException;
 use App\Domain\Billing\OrderStatus;
 use App\Domain\Billing\ProductBillingMode;
+use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Payment\MercadoPagoClient;
 use App\Infrastructure\Persistence\Entity\Billing\Order;
 use App\Infrastructure\Persistence\Entity\Tribute;
@@ -82,12 +83,12 @@ final class OrderCheckoutService
      */
     public function getOwnedOrder(string $orderId, User $user): array
     {
-        if (!\Symfony\Component\Uid\Uuid::isValid($orderId)) {
+        if (!UuidValue::isValid($orderId)) {
             throw new BillingException('Pedido não encontrado.', 'ORDER_NOT_FOUND', 404);
         }
 
         $order = $this->orderRepository->findOwnedById(
-            \Symfony\Component\Uid\Uuid::fromString($orderId),
+            UuidValue::fromString($orderId),
             $user->getId(),
         );
         if ($order === null) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Tribute;
 
 use App\Application\Billing\PendingOrderInvalidationService;
+use App\Domain\Shared\UuidValue;
 use App\Domain\Tribute\Exception\TributeException;
 use App\Domain\Tribute\MusicSource;
 use App\Domain\Tribute\TributeEffects;
@@ -16,7 +17,6 @@ use App\Infrastructure\Persistence\Repository\Catalog\TributeTypeRepository;
 use App\Infrastructure\Persistence\Repository\Music\MusicTrackRepository;
 use App\Infrastructure\Persistence\Repository\TributeRepository;
 use App\Infrastructure\Persistence\Repository\UserRepository;
-use Symfony\Component\Uid\Uuid;
 
 final class TributeService
 {
@@ -49,12 +49,12 @@ final class TributeService
             );
         }
 
-        if (!Uuid::isValid($tributeTypeId) || !Uuid::isValid($templateId)) {
+        if (!UuidValue::isValid($tributeTypeId) || !UuidValue::isValid($templateId)) {
             throw new TributeException('tribute_type_id e template_id são obrigatórios.', 'VALIDATION_ERROR', 400);
         }
 
-        $tributeType = $this->tributeTypeRepository->findActiveById(Uuid::fromString($tributeTypeId));
-        $template = $this->templateRepository->findActiveById(Uuid::fromString($templateId));
+        $tributeType = $this->tributeTypeRepository->findActiveById(UuidValue::fromString($tributeTypeId));
+        $template = $this->templateRepository->findActiveById(UuidValue::fromString($templateId));
 
         if ($tributeType === null || $template === null) {
             throw new TributeException('Tipo ou template não encontrado.', 'CATALOG_NOT_FOUND', 404);
@@ -104,11 +104,11 @@ final class TributeService
 
     public function getOwned(string $id, User $user): Tribute
     {
-        if (!Uuid::isValid($id)) {
+        if (!UuidValue::isValid($id)) {
             throw new TributeException('Homenagem não encontrada.', 'TRIBUTE_NOT_FOUND', 404);
         }
 
-        $tribute = $this->tributeRepository->findOwnedById(Uuid::fromString($id), $user->getId());
+        $tribute = $this->tributeRepository->findOwnedById(UuidValue::fromString($id), $user->getId());
         if ($tribute === null) {
             throw new TributeException('Homenagem não encontrada.', 'TRIBUTE_NOT_FOUND', 404);
         }
@@ -173,10 +173,10 @@ final class TributeService
         }
 
         if (array_key_exists('tribute_type_id', $payload) && $payload['tribute_type_id'] !== null) {
-            if (!Uuid::isValid((string) $payload['tribute_type_id'])) {
+            if (!UuidValue::isValid((string) $payload['tribute_type_id'])) {
                 throw new TributeException('Tipo de homenagem inválido.', 'VALIDATION_ERROR', 400);
             }
-            $type = $this->tributeTypeRepository->findActiveById(Uuid::fromString((string) $payload['tribute_type_id']));
+            $type = $this->tributeTypeRepository->findActiveById(UuidValue::fromString((string) $payload['tribute_type_id']));
             if ($type === null) {
                 throw new TributeException('Tipo de homenagem não encontrado.', 'CATALOG_NOT_FOUND', 404);
             }
@@ -187,10 +187,10 @@ final class TributeService
         }
 
         if (array_key_exists('template_id', $payload) && $payload['template_id'] !== null) {
-            if (!Uuid::isValid((string) $payload['template_id'])) {
+            if (!UuidValue::isValid((string) $payload['template_id'])) {
                 throw new TributeException('Template inválido.', 'VALIDATION_ERROR', 400);
             }
-            $template = $this->templateRepository->findActiveById(Uuid::fromString((string) $payload['template_id']));
+            $template = $this->templateRepository->findActiveById(UuidValue::fromString((string) $payload['template_id']));
             if ($template === null) {
                 throw new TributeException('Template não encontrado.', 'CATALOG_NOT_FOUND', 404);
             }
@@ -223,8 +223,8 @@ final class TributeService
                 if ($tribute->getMusicSource() === MusicSource::Library) {
                     $tribute->setMusicSource(MusicSource::None);
                 }
-            } elseif (Uuid::isValid((string) $trackId)) {
-                $track = $this->musicTrackRepository->findActiveById(Uuid::fromString((string) $trackId));
+            } elseif (UuidValue::isValid((string) $trackId)) {
+                $track = $this->musicTrackRepository->findActiveById(UuidValue::fromString((string) $trackId));
                 if ($track === null) {
                     throw new TributeException('Faixa musical não encontrada.', 'MUSIC_TRACK_NOT_FOUND', 404);
                 }
