@@ -22,6 +22,7 @@ final class HealthCheckService
     {
         $checks = [
             'database' => $this->checkDatabase(),
+            'auth_schema' => $this->checkAuthSchema(),
             'storage_api' => $this->checkStorageApi(),
         ];
 
@@ -38,6 +39,18 @@ final class HealthCheckService
     {
         try {
             $this->connection->executeQuery('SELECT 1');
+
+            return 'ok';
+        } catch (\Throwable) {
+            return 'error';
+        }
+    }
+
+    private function checkAuthSchema(): string
+    {
+        try {
+            $this->connection->executeQuery('SELECT 1 FROM users LIMIT 1');
+            $this->connection->executeQuery('SELECT 1 FROM email_verification_tokens LIMIT 1');
 
             return 'ok';
         } catch (\Throwable) {

@@ -1,4 +1,6 @@
 parameters:
-    mail.enabled: '%env(bool:default:false:MAIL_ENABLED)%'
-    mail.from: '%env(default::MAIL_FROM)%'
+    mail_enabled_default: '0'
+    mail.from_default: 'MayLove <noreply@maylove.com.br>'
+    mail.enabled: '%env(bool:default:mail_enabled_default:MAIL_ENABLED)%'
+    mail.from: '%env(default:mail.from_default:MAIL_FROM)%'
     mail.frontend_url: '%env(APP_URL)%'
