@@ -10,3 +10,5 @@ framework:
             App\Infrastructure\Messenger\Message\GenerateOgImageMessage: sync
             App\Infrastructure\Messenger\Message\RecordTributeViewMessage: sync
             App\Infrastructure\Messenger\Message\ProcessMercadoPagoWebhookMessage: sync
+            App\Infrastructure\Messenger\Message\ProcessMusicExtractMessage: sync
+            App\Infrastructure\Messenger\Message\ImportMusicFromYoutubeMessage: sync

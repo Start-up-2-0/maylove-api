@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Music;
 
+use App\Domain\Tribute\MediaProcessingStatus;
 use App\Domain\Tribute\MusicSource;
 use App\Infrastructure\Persistence\Entity\Tribute;
 use App\Infrastructure\Persistence\Entity\TributeMedia;
@@ -50,13 +51,23 @@ final class TributeMusicSerializer
 
         if ($source === MusicSource::Upload && $tribute->getMusicMediaId() !== null && $media !== null) {
             foreach ($media as $item) {
-                if ($item->getId()->equals($tribute->getMusicMediaId())) {
+                if (
+                    $item->getId()->equals($tribute->getMusicMediaId())
+                    && $item->getProcessingStatus() === MediaProcessingStatus::Ready
+                ) {
                     $url = $this->resolveMediaUrl($item);
                     $block['url'] = $url;
                     $block['preview_url'] = $url;
                     break;
                 }
             }
+        }
+
+        $content = $tribute->getContentJson();
+        if (isset($content['music_duration_seconds'])) {
+            $block['duration_seconds'] = (float) $content['music_duration_seconds'];
+        } elseif ($block['track'] !== null) {
+            $block['duration_seconds'] = $block['track']['duration_seconds'] ?? null;
         }
 
         return $block;

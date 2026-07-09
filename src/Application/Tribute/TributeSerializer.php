@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Tribute;
 
 use App\Application\Music\TributeMusicSerializer;
+use App\Domain\Tribute\MediaProcessingStatus;
 use App\Domain\Tribute\MusicSource;
 use App\Domain\Tribute\TributeMediaType;
 use App\Infrastructure\Persistence\Entity\Tribute;
@@ -110,9 +111,15 @@ final class TributeSerializer
             'sort_order' => $media->getSortOrder(),
             'url_thumbnail' => $media->getUrlThumbnail(),
             'created_at' => $media->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            'processing_status' => $media->getProcessingStatus()->value,
+            'processing_error' => $media->getProcessingError(),
         ];
 
-        if ($includeUrl && $media->getMimeType() !== null) {
+        if (
+            $includeUrl
+            && $media->getMimeType() !== null
+            && $media->getProcessingStatus() === MediaProcessingStatus::Ready
+        ) {
             try {
                 $urlData = $this->storageApiClient->getFileUrl($media->getStorageFileId());
                 $data['url'] = $urlData['url'] ?? null;

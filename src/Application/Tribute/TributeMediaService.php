@@ -7,30 +7,37 @@ namespace App\Application\Tribute;
 use App\Application\Billing\PendingOrderInvalidationService;
 use App\Domain\Shared\UuidValue;
 use App\Domain\Tribute\Exception\TributeException;
+use App\Domain\Tribute\MediaProcessingStatus;
 use App\Domain\Tribute\MusicSource;
 use App\Domain\Tribute\TributeMediaType;
+use App\Infrastructure\Messenger\Message\ProcessMusicExtractMessage;
 use App\Infrastructure\Persistence\Entity\Tribute;
 use App\Infrastructure\Persistence\Entity\TributeMedia;
 use App\Infrastructure\Persistence\Entity\User;
 use App\Infrastructure\Persistence\Repository\TributeMediaRepository;
+use App\Infrastructure\Persistence\Repository\TributeRepository;
 use App\Infrastructure\Storage\StorageApiClient;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 final class TributeMediaService
 {
     private const PHOTO_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
     private const VIDEO_MIMES = ['video/mp4'];
     private const AUDIO_MIMES = ['audio/mpeg', 'audio/mp3'];
+    private const MUSIC_UPLOAD_MIMES = ['audio/mpeg', 'audio/mp3', 'video/mp4'];
 
     private const MAX_PHOTO_BYTES = 50 * 1024 * 1024;
     private const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
-    private const MAX_AUDIO_BYTES = 15 * 1024 * 1024;
+    private const MAX_AUDIO_BYTES = 50 * 1024 * 1024;
 
     public function __construct(
         private readonly TributeMediaRepository $mediaRepository,
+        private readonly TributeRepository $tributeRepository,
         private readonly StorageApiClient $storageApiClient,
         private readonly MediaPresignRateLimitService $rateLimitService,
         private readonly TributeSerializer $serializer,
         private readonly PendingOrderInvalidationService $pendingOrderInvalidation,
+        private readonly MessageBusInterface $messageBus,
     ) {
     }
 
@@ -129,7 +136,8 @@ final class TributeMediaService
             (string) ($media->getMimeType() ?? 'application/octet-stream'),
         );
 
-        $media->setMimeType(isset($confirmed['mime_type']) ? (string) $confirmed['mime_type'] : $media->getMimeType());
+        $mimeType = isset($confirmed['mime_type']) ? (string) $confirmed['mime_type'] : (string) $media->getMimeType();
+        $media->setMimeType($mimeType);
         $media->setSizeBytes(isset($confirmed['size_bytes']) ? (int) $confirmed['size_bytes'] : $media->getSizeBytes());
         $thumbnail = $confirmed['thumbnail_url'] ?? null;
         $media->setUrlThumbnail(is_string($thumbnail) ? $thumbnail : null);
@@ -138,6 +146,31 @@ final class TributeMediaService
             $tribute->setMusicSource(MusicSource::Upload);
             $tribute->setMusicMediaId($media->getId());
             $tribute->setMusicTrackId(null);
+
+            if ($mimeType === 'video/mp4') {
+                $media->setProcessingStatus(MediaProcessingStatus::Processing);
+                $this->mediaRepository->save($media);
+                $this->tributeRepository->save($tribute);
+                $this->messageBus->dispatch(new ProcessMusicExtractMessage(
+                    (string) $tribute->getId(),
+                    (string) $media->getId(),
+                ));
+                $this->mediaRepository->getEntityManager()->refresh($media);
+                $this->tributeRepository->getEntityManager()->refresh($tribute);
+
+                return $this->serializer->serializeMedia($media, includeUrl: true);
+            }
+
+            $media->setProcessingStatus(MediaProcessingStatus::Ready);
+            $content = $tribute->getContentJson();
+            if (isset($confirmed['duration_seconds'])) {
+                $duration = (float) $confirmed['duration_seconds'];
+                $content['music_duration_seconds'] = $duration;
+                $content['music_start_seconds'] = 0.0;
+                $content['music_end_seconds'] = $duration;
+                $tribute->setContentJson($content);
+            }
+            $this->tributeRepository->save($tribute);
         }
 
         $this->mediaRepository->save($media);
@@ -225,7 +258,7 @@ final class TributeMediaService
         $allowed = match ($type) {
             TributeMediaType::Photo => self::PHOTO_MIMES,
             TributeMediaType::Video => self::VIDEO_MIMES,
-            TributeMediaType::Audio => self::AUDIO_MIMES,
+            TributeMediaType::Audio => self::MUSIC_UPLOAD_MIMES,
         };
 
         if ($mimeType !== '' && in_array($mimeType, $allowed, true)) {
@@ -256,7 +289,7 @@ final class TributeMediaService
         $allowed = match ($type) {
             TributeMediaType::Photo => self::PHOTO_MIMES,
             TributeMediaType::Video => self::VIDEO_MIMES,
-            TributeMediaType::Audio => self::AUDIO_MIMES,
+            TributeMediaType::Audio => self::MUSIC_UPLOAD_MIMES,
         };
 
         if (!in_array($mimeType, $allowed, true)) {

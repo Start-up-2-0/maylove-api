@@ -158,6 +158,42 @@ final class StorageApiClient
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function extractAudio(string $fileId): array
+    {
+        $response = $this->httpClient->request(
+            'POST',
+            $this->baseUrl().'/internal/files/'.$fileId.'/extract-audio',
+            ['headers' => $this->serviceHeaders()],
+        );
+
+        return $this->decodeJsonResponse($response, '/internal/files/'.$fileId.'/extract-audio');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function importYoutubeAudio(string $tributeId, string $url, string $userId): array
+    {
+        $response = $this->httpClient->request(
+            'POST',
+            $this->baseUrl().'/internal/youtube-audio',
+            [
+                'headers' => $this->serviceHeaders(),
+                'json' => [
+                    'context' => 'tribute',
+                    'context_id' => $tributeId,
+                    'url' => $url,
+                    'user_id' => $userId,
+                ],
+            ],
+        );
+
+        return $this->decodeJsonResponse($response, '/internal/youtube-audio');
+    }
+
+    /**
      * @return array<string, string>
      */
     private function serviceHeaders(): array

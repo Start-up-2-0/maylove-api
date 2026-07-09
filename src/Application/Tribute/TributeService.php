@@ -447,6 +447,44 @@ final class TributeService
             }
         }
 
+        if (array_key_exists('music_duration_seconds', $incoming)) {
+            $duration = $incoming['music_duration_seconds'];
+            if ($duration === null) {
+                unset($content['music_duration_seconds'], $content['music_start_seconds'], $content['music_end_seconds']);
+            } elseif (is_int($duration) || is_float($duration)) {
+                $durationValue = (float) $duration;
+                if ($durationValue <= 0) {
+                    throw new TributeException('Duração da música inválida.', 'VALIDATION_ERROR', 400);
+                }
+                $content['music_duration_seconds'] = $durationValue;
+            } else {
+                throw new TributeException('Duração da música inválida.', 'VALIDATION_ERROR', 400);
+            }
+        }
+
+        foreach (['music_start_seconds', 'music_end_seconds'] as $key) {
+            if (!array_key_exists($key, $incoming)) {
+                continue;
+            }
+            $value = $incoming[$key];
+            if ($value === null) {
+                unset($content[$key]);
+            } elseif (is_int($value) || is_float($value)) {
+                $content[$key] = (float) $value;
+            } else {
+                throw new TributeException(sprintf('Valor inválido para %s.', $key), 'VALIDATION_ERROR', 400);
+            }
+        }
+
+        $duration = isset($content['music_duration_seconds']) ? (float) $content['music_duration_seconds'] : null;
+        $start = isset($content['music_start_seconds']) ? (float) $content['music_start_seconds'] : null;
+        $end = isset($content['music_end_seconds']) ? (float) $content['music_end_seconds'] : null;
+        if ($duration !== null && $start !== null && $end !== null) {
+            if ($start < 0 || $end <= $start || $end > $duration) {
+                throw new TributeException('Trecho musical inválido.', 'VALIDATION_ERROR', 400);
+            }
+        }
+
         // Informações de evento (data/local/mapa). null/[] limpa.
         if (array_key_exists('event_info', $incoming)) {
             $event = $incoming['event_info'];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\UI\Http\Controller\Tribute;
 
+use App\Application\Music\TributeMusicStatusService;
 use App\Application\Tribute\TributeMediaService;
 use App\Application\Tribute\TributeService;
 use App\Infrastructure\Security\MayLoveUser;
@@ -21,6 +22,7 @@ final class TributeMediaController extends AbstractController
     public function __construct(
         private readonly TributeService $tributeService,
         private readonly TributeMediaService $mediaService,
+        private readonly TributeMusicStatusService $musicStatusService,
     ) {
     }
 
@@ -81,5 +83,17 @@ final class TributeMediaController extends AbstractController
         $this->mediaService->delete($tribute, $mediaId);
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/{mediaId}/status', name: 'status', methods: ['GET'])]
+    public function status(string $tributeId, string $mediaId, #[CurrentUser] ?MayLoveUser $user): JsonResponse
+    {
+        if ($user === null) {
+            return ApiResponse::error('Não autorizado.', 'UNAUTHORIZED', Response::HTTP_UNAUTHORIZED);
+        }
+
+        $tribute = $this->tributeService->getOwned($tributeId, $user->getUser());
+
+        return ApiResponse::success('OK', $this->musicStatusService->resolveForMedia($tribute, $mediaId));
     }
 }

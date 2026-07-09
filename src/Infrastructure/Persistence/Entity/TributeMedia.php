@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Entity;
 
+use App\Domain\Tribute\MediaProcessingStatus;
 use App\Domain\Tribute\TributeMediaType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -45,6 +46,12 @@ class TributeMedia
 
     #[ORM\Column(name: 'deleted_at', type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $deletedAt = null;
+
+    #[ORM\Column(name: 'processing_status', length: 20, enumType: MediaProcessingStatus::class, options: ['default' => 'ready'])]
+    private MediaProcessingStatus $processingStatus = MediaProcessingStatus::Ready;
+
+    #[ORM\Column(name: 'processing_error', length: 500, nullable: true)]
+    private ?string $processingError = null;
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
@@ -148,5 +155,25 @@ class TributeMedia
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getProcessingStatus(): MediaProcessingStatus
+    {
+        return $this->processingStatus;
+    }
+
+    public function setProcessingStatus(MediaProcessingStatus $processingStatus): void
+    {
+        $this->processingStatus = $processingStatus;
+    }
+
+    public function getProcessingError(): ?string
+    {
+        return $this->processingError;
+    }
+
+    public function setProcessingError(?string $processingError): void
+    {
+        $this->processingError = $processingError;
     }
 }
