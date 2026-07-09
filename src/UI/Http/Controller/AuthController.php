@@ -231,7 +231,7 @@ final class AuthController extends AbstractController
             'id' => (string) $user->getId(),
             'name' => $user->getName(),
             'email' => $user->getEmail(),
-            'emailVerified' => $user->isEmailVerified(),
+            'email_verified' => $user->isEmailVerified(),
             'status' => $user->getStatus()->value,
         ];
     }

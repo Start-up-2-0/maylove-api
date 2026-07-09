@@ -41,8 +41,6 @@ final class AuthSessionService
             'issuedAt' => $now->format(\DateTimeInterface::ATOM),
         ]);
 
-        $this->sessionRepository->save($session);
-
         $accessToken = $this->tokenService->issueAccessToken($user, (string) $session->getId(), $now);
         $session->setAccessTokenHash($this->tokenService->hashToken($accessToken));
         $session->setAccessTokenExpiresAt($this->tokenService->getAccessTokenExpiration($now));
