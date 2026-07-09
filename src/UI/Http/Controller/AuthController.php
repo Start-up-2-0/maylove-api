@@ -69,8 +69,8 @@ final class AuthController extends AbstractController
             return ApiResponse::error($exception->getMessage(), 'EMAIL_ALREADY_EXISTS', Response::HTTP_CONFLICT);
         } catch (UniqueConstraintViolationException) {
             return ApiResponse::error('E-mail já cadastrado.', 'EMAIL_ALREADY_EXISTS', Response::HTTP_CONFLICT);
-        } catch (\Throwable $exception) {
-            return ApiResponse::error($exception->getMessage(), 'REGISTER_FAILED', Response::HTTP_INTERNAL_SERVER_ERROR);
+        } catch (\Throwable) {
+            return ApiResponse::error('Não foi possível criar a conta.', 'REGISTER_FAILED', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return ApiResponse::success('Cadastro realizado com sucesso. Verifique seu e-mail para confirmar a conta.', [
