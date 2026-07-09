@@ -15,6 +15,7 @@ use App\Infrastructure\Persistence\Repository\Catalog\TemplateRepository;
 use App\Infrastructure\Persistence\Repository\Catalog\TributeTypeRepository;
 use App\Infrastructure\Persistence\Repository\Music\MusicTrackRepository;
 use App\Infrastructure\Persistence\Repository\TributeRepository;
+use App\Infrastructure\Persistence\Repository\UserRepository;
 use Symfony\Component\Uid\Uuid;
 
 final class TributeService
@@ -26,12 +27,20 @@ final class TributeService
         private readonly MusicTrackRepository $musicTrackRepository,
         private readonly TributeSlugGenerator $slugGenerator,
         private readonly PendingOrderInvalidationService $pendingOrderInvalidation,
+        private readonly UserRepository $userRepository,
         private readonly bool $emailVerificationEnabled,
     ) {
     }
 
     public function create(User $user, string $tributeTypeId, string $templateId): Tribute
     {
+        $managedUser = $this->userRepository->find($user->getId());
+        if ($managedUser === null) {
+            throw new TributeException('Usuário não encontrado.', 'USER_NOT_FOUND', 404);
+        }
+
+        $user = $managedUser;
+
         if ($this->emailVerificationEnabled && !$user->isEmailVerified()) {
             throw new TributeException(
                 'Confirme seu e-mail antes de criar uma homenagem.',
@@ -63,7 +72,16 @@ final class TributeService
         $tribute->setSubtitle(isset($defaultTexts['subtitle_suggestion']) ? (string) $defaultTexts['subtitle_suggestion'] : (isset($defaultTexts['subtitle']) ? (string) $defaultTexts['subtitle'] : null));
         $tribute->setColorPrimary($template->getPrimaryColor());
 
-        $this->tributeRepository->save($tribute);
+        try {
+            $this->tributeRepository->save($tribute);
+        } catch (\Throwable $exception) {
+            throw new TributeException(
+                'Falha ao criar homenagem: '.$exception->getMessage(),
+                'TRIBUTE_CREATE_FAILED',
+                500,
+                $exception,
+            );
+        }
 
         return $tribute;
     }

@@ -9,6 +9,7 @@ use App\Application\Tribute\TributePublishService;
 use App\Application\Tribute\TributeSerializer;
 use App\Application\Tribute\TributeService;
 use App\Application\Tribute\TributeValidationService;
+use App\Domain\Tribute\Exception\TributeException;
 use App\Infrastructure\Security\MayLoveUser;
 use App\UI\Http\ApiResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -46,9 +47,20 @@ final class TributeController extends AbstractController
             (string) ($payload['template_id'] ?? ''),
         );
 
+        try {
+            $data = $this->serializer->serializeDetail($tribute);
+        } catch (\Throwable $exception) {
+            throw new TributeException(
+                'Falha ao serializar homenagem: '.$exception->getMessage(),
+                'TRIBUTE_SERIALIZE_FAILED',
+                500,
+                $exception,
+            );
+        }
+
         return ApiResponse::success(
             'Homenagem criada com sucesso.',
-            $this->serializer->serializeDetail($tribute),
+            $data,
             Response::HTTP_CREATED,
         );
     }
