@@ -1,4 +1,5 @@
 parameters:
+    billing.enabled: '%env(bool:default:false:BILLING_ENABLED)%'
     mercadopago.access_token: '%env(MERCADOPAGO_ACCESS_TOKEN)%'
     mercadopago.webhook_secret: '%env(MERCADOPAGO_WEBHOOK_SECRET)%'
     mercadopago.api_base: '%env(default:mercadopago_api_base_default:MERCADOPAGO_API_BASE)%'

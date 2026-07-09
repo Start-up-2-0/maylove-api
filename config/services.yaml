@@ -29,10 +29,15 @@ services:
         arguments:
             $webhookSecret: '%mercadopago.webhook_secret%'
 
+    App\Application\Billing\SubscriptionCapabilityService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
+
     App\Application\Billing\SubscriptionService:
         arguments:
             $frontendUrl: '%app.url%'
             $notificationUrl: '%mercadopago.notification_url%'
+            $billingEnabled: '%billing.enabled%'
 
     App\Application\Billing\OrderCheckoutService:
         arguments:
@@ -91,6 +96,14 @@ services:
     App\Application\User\VerificationResendRateLimitService:
         arguments:
             $maxPerHour: '%auth.email_resend_max_per_hour%'
+
+    App\Application\Tribute\TributeCheckoutService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
+
+    App\Application\Tribute\TributePublishService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
 
     App\UI\Http\Controller\Web\PublicTributePageController:
         arguments:

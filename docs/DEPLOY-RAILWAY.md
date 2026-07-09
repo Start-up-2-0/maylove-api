@@ -47,6 +47,7 @@ O nome do banco (`railway` ou `maylove`) vem do plugin; as migrations criam as t
 |----------|----------------|
 | `APP_ENV` | exatamente `prod` (não use `production` nem deixe vazio) |
 | `APP_SECRET` | gere um valor aleatório longo |
+| `BILLING_ENABLED` | `false` em teste/staging; `true` quando Mercado Pago estiver ativo |
 | `REDIS_URL` | referência → Redis → `REDIS_URL` ou `REDIS_PRIVATE_URL` |
 | `MESSENGER_TRANSPORT_DSN` | `${REDIS_URL}/messages` — ex.: `redis://default:pass@redis.railway.internal:6379/messages` |
 | `STORAGE_API_URL` | URL interna do maylove-storages (`http://<servico>.railway.internal:<PORT>`) |

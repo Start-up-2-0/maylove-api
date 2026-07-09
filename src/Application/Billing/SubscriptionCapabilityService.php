@@ -18,7 +18,13 @@ final class SubscriptionCapabilityService
     public function __construct(
         private readonly UserSubscriptionRepository $subscriptionRepository,
         private readonly Client $redis,
+        private readonly bool $billingEnabled,
     ) {
+    }
+
+    public function isBillingEnabled(): bool
+    {
+        return $this->billingEnabled;
     }
 
     public function hasActiveSubscription(string $userId): bool
@@ -28,6 +34,10 @@ final class SubscriptionCapabilityService
 
     public function canPublishFree(string $userId): bool
     {
+        if (!$this->billingEnabled) {
+            return true;
+        }
+
         return $this->hasActiveSubscription($userId);
     }
 

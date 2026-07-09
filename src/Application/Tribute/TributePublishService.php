@@ -19,6 +19,7 @@ final class TributePublishService
         private readonly SubscriptionCapabilityService $subscriptionCapability,
         private readonly TributeRepository $tributeRepository,
         private readonly TributePublishedDispatcher $publishedDispatcher,
+        private readonly bool $billingEnabled,
     ) {
     }
 
@@ -38,7 +39,7 @@ final class TributePublishService
         }
 
         $userId = (string) $user->getId();
-        if (!$this->subscriptionCapability->canPublishFree($userId)) {
+        if ($this->billingEnabled && !$this->subscriptionCapability->canPublishFree($userId)) {
             throw new TributeException(
                 'Assinatura ativa necessária. Use o checkout para pagamento avulso.',
                 'SUBSCRIPTION_REQUIRED',
@@ -46,8 +47,9 @@ final class TributePublishService
             );
         }
 
-        $billingMode = $this->subscriptionCapability->getBillingMode($userId)
-            ?? BillingModeUsed::SubscriptionMonthly;
+        $billingMode = $this->billingEnabled
+            ? ($this->subscriptionCapability->getBillingMode($userId) ?? BillingModeUsed::SubscriptionMonthly)
+            : BillingModeUsed::PerTribute;
 
         $tribute->markPublished($billingMode);
         $this->tributeRepository->save($tribute);

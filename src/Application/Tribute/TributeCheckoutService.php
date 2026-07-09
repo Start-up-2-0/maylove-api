@@ -19,6 +19,7 @@ final class TributeCheckoutService
         private readonly SubscriptionCapabilityService $subscriptionCapability,
         private readonly OrderCheckoutService $orderCheckoutService,
         private readonly TributeRepository $tributeRepository,
+        private readonly bool $billingEnabled,
     ) {
     }
 
@@ -27,6 +28,13 @@ final class TributeCheckoutService
      */
     public function checkout(Tribute $tribute, User $user): array
     {
+        if (!$this->billingEnabled) {
+            throw new TributeException(
+                'Pagamentos desativados neste ambiente.',
+                'BILLING_DISABLED',
+                503,
+            );
+        }
         if ($tribute->getStatus() === TributeStatus::Published) {
             throw new TributeException('Homenagem já publicada.', 'ALREADY_PUBLISHED', 409);
         }

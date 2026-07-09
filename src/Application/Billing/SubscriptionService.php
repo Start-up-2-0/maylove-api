@@ -24,6 +24,7 @@ final class SubscriptionService
         private readonly SubscriptionCapabilityService $subscriptionCapability,
         private readonly string $frontendUrl,
         private readonly string $notificationUrl,
+        private readonly bool $billingEnabled,
     ) {
     }
 
@@ -36,6 +37,7 @@ final class SubscriptionService
 
         if ($subscription === null) {
             return [
+                'billing_enabled' => $this->billingEnabled,
                 'has_subscription' => false,
                 'status' => null,
                 'billing_mode' => null,
@@ -44,7 +46,10 @@ final class SubscriptionService
             ];
         }
 
-        return $this->serialize($subscription);
+        return array_merge(
+            ['billing_enabled' => $this->billingEnabled],
+            $this->serialize($subscription),
+        );
     }
 
     /**
