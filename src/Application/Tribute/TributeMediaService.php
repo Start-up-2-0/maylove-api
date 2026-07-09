@@ -21,7 +21,7 @@ final class TributeMediaService
     private const VIDEO_MIMES = ['video/mp4'];
     private const AUDIO_MIMES = ['audio/mpeg', 'audio/mp3'];
 
-    private const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+    private const MAX_PHOTO_BYTES = 50 * 1024 * 1024;
     private const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
     private const MAX_AUDIO_BYTES = 15 * 1024 * 1024;
 
@@ -54,7 +54,11 @@ final class TributeMediaService
         }
 
         $filename = basename(str_replace('\\', '/', (string) ($payload['filename'] ?? '')));
-        $mimeType = strtolower(trim((string) ($payload['mime_type'] ?? '')));
+        $mimeType = $this->resolveMimeType(
+            strtolower(trim((string) ($payload['mime_type'] ?? ''))),
+            $filename,
+            $mediaType,
+        );
         $sizeBytes = (int) ($payload['size_bytes'] ?? 0);
 
         if ($filename === '' || str_contains($filename, '..')) {
@@ -214,6 +218,37 @@ final class TributeMediaService
                 403,
             );
         }
+    }
+
+  private function resolveMimeType(string $mimeType, string $filename, TributeMediaType $type): string
+    {
+        $allowed = match ($type) {
+            TributeMediaType::Photo => self::PHOTO_MIMES,
+            TributeMediaType::Video => self::VIDEO_MIMES,
+            TributeMediaType::Audio => self::AUDIO_MIMES,
+        };
+
+        if ($mimeType !== '' && in_array($mimeType, $allowed, true)) {
+            return $mimeType;
+        }
+
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $byExtension = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'mp4' => 'video/mp4',
+            'mp3' => 'audio/mpeg',
+            'mpeg' => 'audio/mpeg',
+        ];
+
+        $inferred = $byExtension[$extension] ?? '';
+        if ($inferred !== '' && in_array($inferred, $allowed, true)) {
+            return $inferred;
+        }
+
+        return $mimeType;
     }
 
     private function assertMimeAndSize(TributeMediaType $type, string $mimeType, int $sizeBytes): void
