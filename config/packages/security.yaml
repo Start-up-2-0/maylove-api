@@ -1,7 +1,8 @@
 security:
     password_hashers:
         App\Infrastructure\Persistence\Entity\User:
-            algorithm: auto
+            algorithm: bcrypt
+            cost: 13
 
     providers:
         maylove_users:

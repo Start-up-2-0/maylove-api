@@ -15,6 +15,7 @@ use App\Infrastructure\Persistence\Entity\User;
 use App\Infrastructure\Security\MayLoveUser;
 use App\UI\Http\ApiResponse;
 use App\UI\Http\AuthRefreshCookie;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -66,6 +67,8 @@ final class AuthController extends AbstractController
             );
         } catch (\InvalidArgumentException $exception) {
             return ApiResponse::error($exception->getMessage(), 'EMAIL_ALREADY_EXISTS', Response::HTTP_CONFLICT);
+        } catch (UniqueConstraintViolationException) {
+            return ApiResponse::error('E-mail já cadastrado.', 'EMAIL_ALREADY_EXISTS', Response::HTTP_CONFLICT);
         }
 
         return ApiResponse::success('Cadastro realizado com sucesso. Verifique seu e-mail para confirmar a conta.', [
