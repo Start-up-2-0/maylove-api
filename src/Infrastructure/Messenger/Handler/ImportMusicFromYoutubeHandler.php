@@ -91,10 +91,11 @@ final class ImportMusicFromYoutubeHandler
             $this->mediaRepository->save($media);
             $this->tributeRepository->save($tribute);
         } catch (\Throwable $exception) {
+            $errorMessage = $this->resolveImportErrorMessage($exception);
             $content = $tribute->getContentJson();
             $content['music_import'] = [
                 'status' => 'failed',
-                'error' => 'Não foi possível importar o áudio do YouTube.',
+                'error' => $errorMessage,
                 'media_id' => null,
             ];
             $tribute->setContentJson($content);
@@ -105,5 +106,19 @@ final class ImportMusicFromYoutubeHandler
                 'error' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function resolveImportErrorMessage(\Throwable $exception): string
+    {
+        $message = trim($exception->getMessage());
+        if ($message === '') {
+            return 'Não foi possível importar o áudio do YouTube.';
+        }
+
+        if (str_contains($message, 'Não foi possível') || str_contains($message, 'indisponível') || str_contains($message, 'bloqueou')) {
+            return $message;
+        }
+
+        return 'Não foi possível importar o áudio do YouTube.';
     }
 }
