@@ -5,6 +5,6 @@ parameters:
     mercadopago.webhook_secret: '%env(MERCADOPAGO_WEBHOOK_SECRET)%'
     mercadopago.api_base: '%env(default:mercadopago_api_base_default:MERCADOPAGO_API_BASE)%'
     mercadopago.webhook_signature_required: '%env(bool:default:mercadopago_webhook_sig_default:MERCADOPAGO_WEBHOOK_SIGNATURE_REQUIRED)%'
-    mercadopago.notification_url: '%env(default:default_uri:DEFAULT_URI)%/webhooks/mercadopago'
+    mercadopago.notification_url: '%default_uri%/webhooks/mercadopago'
     mercadopago_api_base_default: 'https://api.mercadopago.com'
     mercadopago_webhook_sig_default: 'true'

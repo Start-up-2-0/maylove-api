@@ -2,6 +2,8 @@ parameters:
     app.url: '%env(APP_URL)%'
     app_expose_errors_default: '0'
     app.expose_errors: '%env(bool:default:app_expose_errors_default:APP_EXPOSE_ERRORS)%'
+    default_uri_default: 'http://localhost:8080'
+    default_uri: '%env(default:default_uri_default:DEFAULT_URI)%'
     storage.api_url: '%env(STORAGE_API_URL)%'
     storage.public_url: '%env(default:storage_public_url_default:STORAGE_PUBLIC_URL)%'
     storage.service_token_secret: '%env(STORAGE_SERVICE_TOKEN_SECRET)%'
