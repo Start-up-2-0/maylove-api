@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Infrastructure\Storage;
 
 use App\Infrastructure\Security\MayLoveServiceTokenService;
+use Symfony\Component\HttpClient\Exception\JsonException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
 final class StorageApiClient
 {
@@ -49,9 +51,7 @@ final class StorageApiClient
             ],
         );
 
-        $body = $response->toArray(false);
-
-        return $body['data'] ?? $body;
+        return $this->decodeJsonResponse($response, '/internal/upload-ticket');
     }
 
     /**
@@ -171,5 +171,36 @@ final class StorageApiClient
     private function baseUrl(): string
     {
         return rtrim($this->storageApiUrl, '/');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decodeJsonResponse(ResponseInterface $response, string $path): array
+    {
+        $statusCode = $response->getStatusCode();
+
+        try {
+            $body = $response->toArray(false);
+        } catch (JsonException $exception) {
+            $snippet = substr(trim($response->getContent(false)), 0, 200);
+
+            throw new \RuntimeException(sprintf(
+                'Storage API retornou resposta inválida (HTTP %d) em %s%s',
+                $statusCode,
+                $this->baseUrl().$path,
+                $snippet !== '' ? ': '.$snippet : '',
+            ), 0, $exception);
+        }
+
+        if ($statusCode >= 400) {
+            $message = is_string($body['message'] ?? null)
+                ? $body['message']
+                : 'Erro ao comunicar com o serviço de arquivos.';
+
+            throw new \RuntimeException($message);
+        }
+
+        return $body['data'] ?? $body;
     }
 }
