@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Tribute;
 
+use App\Application\Wizard\PresentationSchemaProvider;
 use App\Domain\Tribute\MusicSource;
 use App\Domain\Tribute\TributeEffects;
 use App\Domain\Tribute\TributeMediaType;
@@ -14,6 +15,7 @@ final class TributeValidationService
 {
     public function __construct(
         private readonly TributeMediaRepository $mediaRepository,
+        private readonly PresentationSchemaProvider $schemaProvider,
     ) {
     }
 
@@ -35,9 +37,27 @@ final class TributeValidationService
             $errors[] = $this->issue('message', 'MIN_LENGTH', 'A mensagem deve ter pelo menos 10 caracteres.');
         }
 
+        // Requisitos de mídia dependem do estilo de apresentação escolhido: alguns
+        // (ex.: Carta Simples) tornam fotos opcionais; layouts narrativos usam
+        // "Momentos" e aceitam fotos ou momentos.
+        $content = $tribute->getContentJson();
+        $presentation = is_string($content['presentation'] ?? null) ? $content['presentation'] : null;
+        $requirements = $this->schemaProvider->requirementsFor($presentation);
         $photoCount = $this->mediaRepository->countActiveByTributeAndType($tribute, TributeMediaType::Photo);
-        if ($photoCount < 1) {
-            $errors[] = $this->issue('photos', 'MIN_PHOTOS', 'É necessário pelo menos uma foto.');
+        $momentCount = is_array($content['timeline'] ?? null) ? count($content['timeline']) : 0;
+
+        if ($requirements['usesMoments']) {
+            if ($photoCount < 1 && $momentCount < 1) {
+                $errors[] = $this->issue('moments', 'MIN_MOMENTS', 'Adicione ao menos um momento ou uma foto.');
+            }
+        } elseif ($requirements['minPhotos'] > 0 && $photoCount < $requirements['minPhotos']) {
+            $errors[] = $this->issue(
+                'photos',
+                'MIN_PHOTOS',
+                sprintf('É necessário pelo menos %d foto(s) para este estilo.', $requirements['minPhotos']),
+            );
+        } elseif ($photoCount < 1) {
+            $warnings[] = $this->issue('photos', 'NO_PHOTOS', 'Nenhuma foto adicionada.');
         }
 
         if ($tribute->getMusicSource() === MusicSource::None) {
