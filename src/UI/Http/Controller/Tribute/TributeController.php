@@ -41,28 +41,29 @@ final class TributeController extends AbstractController
         /** @var array<string, mixed> $payload */
         $payload = json_decode($request->getContent(), true) ?? [];
 
-        $tribute = $this->tributeService->create(
-            $user->getUser(),
-            (string) ($payload['tribute_type_id'] ?? ''),
-            (string) ($payload['template_id'] ?? ''),
-        );
-
         try {
+            $tribute = $this->tributeService->create(
+                $user->getUser(),
+                (string) ($payload['tribute_type_id'] ?? ''),
+                (string) ($payload['template_id'] ?? ''),
+            );
+
             $data = $this->serializer->serializeDetail($tribute);
+
+            return ApiResponse::success(
+                'Homenagem criada com sucesso.',
+                $data,
+                Response::HTTP_CREATED,
+            );
+        } catch (TributeException $exception) {
+            return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
         } catch (\Throwable $exception) {
-            throw new TributeException(
-                'Falha ao serializar homenagem: '.$exception->getMessage(),
-                'TRIBUTE_SERIALIZE_FAILED',
-                500,
-                $exception,
+            return ApiResponse::error(
+                'Falha ao criar homenagem: '.$exception->getMessage(),
+                'TRIBUTE_CREATE_FAILED',
+                Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }
-
-        return ApiResponse::success(
-            'Homenagem criada com sucesso.',
-            $data,
-            Response::HTTP_CREATED,
-        );
     }
 
     #[Route('', name: 'list', methods: ['GET'])]

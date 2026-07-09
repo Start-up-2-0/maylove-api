@@ -43,7 +43,7 @@ final class ApiExceptionSubscriber implements EventSubscriberInterface
         }
 
         $payload = [
-            'message' => $this->exposeErrors ? $throwable->getMessage() : 'Erro interno.',
+            'message' => $throwable->getMessage() !== '' ? $throwable->getMessage() : 'Erro interno.',
             'code' => 'INTERNAL_ERROR',
         ];
 
