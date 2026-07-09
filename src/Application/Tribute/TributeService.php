@@ -59,8 +59,8 @@ final class TributeService
         $slug = $this->slugGenerator->generateUnique();
 
         $tribute = new Tribute($user, $tributeType, $template, $slug);
-        $tribute->setTitle(isset($defaultTexts['title']) ? (string) $defaultTexts['title'] : null);
-        $tribute->setSubtitle(isset($defaultTexts['subtitle']) ? (string) $defaultTexts['subtitle'] : null);
+        $tribute->setTitle(isset($defaultTexts['title_suggestion']) ? (string) $defaultTexts['title_suggestion'] : (isset($defaultTexts['title']) ? (string) $defaultTexts['title'] : null));
+        $tribute->setSubtitle(isset($defaultTexts['subtitle_suggestion']) ? (string) $defaultTexts['subtitle_suggestion'] : (isset($defaultTexts['subtitle']) ? (string) $defaultTexts['subtitle'] : null));
         $tribute->setColorPrimary($template->getPrimaryColor());
 
         $this->tributeRepository->save($tribute);

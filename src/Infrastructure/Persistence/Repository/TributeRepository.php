@@ -89,7 +89,6 @@ final class TributeRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('t')
             ->select('COUNT(t.id)')
             ->andWhere('t.slug = :slug')
-            ->andWhere('t.deletedAt IS NULL')
             ->setParameter('slug', $slug);
 
         if ($excludeId !== null) {

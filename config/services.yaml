@@ -92,6 +92,10 @@ services:
             $cookieSecure: '%auth.cookie_secure%'
             $tokenHeaderName: '%auth.token_header_name%'
 
+    App\UI\Http\EventSubscriber\ApiExceptionSubscriber:
+        arguments:
+            $exposeErrors: '%app.expose_errors%'
+
     App\Infrastructure\Email\ResendEmailGateway:
         arguments:
             $enabled: '%mail.enabled%'
