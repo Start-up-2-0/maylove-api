@@ -25,12 +25,13 @@ final class EmailVerificationService
         private readonly VerificationResendRateLimitService $resendRateLimit,
         private readonly string $frontendUrl,
         private readonly int $verificationHours,
+        private readonly bool $emailVerificationEnabled,
     ) {
     }
 
     public function sendVerificationEmail(User $user): void
     {
-        if ($user->isEmailVerified()) {
+        if (!$this->emailVerificationEnabled || $user->isEmailVerified()) {
             return;
         }
 
@@ -74,7 +75,7 @@ final class EmailVerificationService
 
     public function resendForUser(User $user): void
     {
-        if ($user->isEmailVerified()) {
+        if (!$this->emailVerificationEnabled || $user->isEmailVerified()) {
             return;
         }
 

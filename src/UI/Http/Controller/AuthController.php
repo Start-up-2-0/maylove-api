@@ -73,9 +73,14 @@ final class AuthController extends AbstractController
             return ApiResponse::error('Não foi possível criar a conta.', 'REGISTER_FAILED', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return ApiResponse::success('Cadastro realizado com sucesso. Verifique seu e-mail para confirmar a conta.', [
+        $message = $user->isEmailVerified()
+            ? 'Cadastro realizado com sucesso. Você já pode entrar.'
+            : 'Cadastro realizado com sucesso. Verifique seu e-mail para confirmar a conta.';
+
+        return ApiResponse::success($message, [
             'id' => (string) $user->getId(),
             'email' => $user->getEmail(),
+            'email_verified' => $user->isEmailVerified(),
             'status' => $user->getStatus()->value,
         ], Response::HTTP_CREATED);
     }

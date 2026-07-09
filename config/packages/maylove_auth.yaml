@@ -10,5 +10,7 @@ parameters:
     auth.validate_user_agent_on_token: false
     auth_cookie_secure_default: '0'
     auth.cookie_secure: '%env(bool:default:auth_cookie_secure_default:AUTH_COOKIE_SECURE)%'
+    auth_email_verification_enabled_default: '1'
+    auth.email_verification_enabled: '%env(bool:default:auth_email_verification_enabled_default:AUTH_EMAIL_VERIFICATION_ENABLED)%'
     auth.email_verification_hours: '%env(int:AUTH_EMAIL_VERIFICATION_HOURS)%'
     auth.email_resend_max_per_hour: 3

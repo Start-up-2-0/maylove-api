@@ -22,6 +22,7 @@ final class AuthService
         private readonly LoginRateLimitService $loginRateLimitService,
         private readonly int $maxLoginAttempts,
         private readonly int $lockoutMinutes,
+        private readonly bool $emailVerificationEnabled,
     ) {
     }
 
@@ -70,7 +71,7 @@ final class AuthService
         return new AuthLoginResult(
             $tokens,
             $user,
-            !$user->isEmailVerified(),
+            $this->emailVerificationEnabled && !$user->isEmailVerified(),
         );
     }
 

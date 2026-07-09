@@ -26,12 +26,13 @@ final class TributeService
         private readonly MusicTrackRepository $musicTrackRepository,
         private readonly TributeSlugGenerator $slugGenerator,
         private readonly PendingOrderInvalidationService $pendingOrderInvalidation,
+        private readonly bool $emailVerificationEnabled,
     ) {
     }
 
     public function create(User $user, string $tributeTypeId, string $templateId): Tribute
     {
-        if (!$user->isEmailVerified()) {
+        if ($this->emailVerificationEnabled && !$user->isEmailVerified()) {
             throw new TributeException(
                 'Confirme seu e-mail antes de criar uma homenagem.',
                 'EMAIL_NOT_VERIFIED',

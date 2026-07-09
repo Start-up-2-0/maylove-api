@@ -72,6 +72,15 @@ services:
         arguments:
             $maxLoginAttempts: '%auth.max_login_attempts%'
             $lockoutMinutes: '%auth.lockout_minutes%'
+            $emailVerificationEnabled: '%auth.email_verification_enabled%'
+
+    App\Application\User\RegisterUserService:
+        arguments:
+            $emailVerificationEnabled: '%auth.email_verification_enabled%'
+
+    App\Application\Tribute\TributeService:
+        arguments:
+            $emailVerificationEnabled: '%auth.email_verification_enabled%'
 
     App\Infrastructure\Security\MayLoveTokenAuthenticator:
         arguments:
@@ -92,6 +101,7 @@ services:
         arguments:
             $frontendUrl: '%mail.frontend_url%'
             $verificationHours: '%auth.email_verification_hours%'
+            $emailVerificationEnabled: '%auth.email_verification_enabled%'
 
     App\Application\User\VerificationResendRateLimitService:
         arguments:

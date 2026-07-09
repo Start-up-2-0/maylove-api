@@ -15,6 +15,7 @@ final class RegisterUserService
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly EmailVerificationService $emailVerificationService,
+        private readonly bool $emailVerificationEnabled,
     ) {
     }
 
@@ -29,15 +30,22 @@ final class RegisterUserService
         $user = new User();
         $user->setName($name);
         $user->setEmail($normalizedEmail);
-        $user->setStatus(UserStatus::PendingVerification);
+        if ($this->emailVerificationEnabled) {
+            $user->setStatus(UserStatus::PendingVerification);
+        } else {
+            $user->markEmailVerified();
+        }
+
         $user->setPasswordHash($this->passwordHasher->hashPassword($user, $password));
 
         $this->userRepository->save($user);
 
-        try {
-            $this->emailVerificationService->sendVerificationEmail($user);
-        } catch (\Throwable) {
-            // Cadastro não deve falhar se o envio assíncrono/e-mail estiver indisponível.
+        if ($this->emailVerificationEnabled) {
+            try {
+                $this->emailVerificationService->sendVerificationEmail($user);
+            } catch (\Throwable) {
+                // Cadastro não deve falhar se o envio assíncrono/e-mail estiver indisponível.
+            }
         }
 
         return $user;
