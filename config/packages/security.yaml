@@ -28,6 +28,7 @@ security:
         - { path: ^/api/v1/auth/verify-email, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/tribute-types, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/templates, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/presentations, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/billing/product, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/music-tracks, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/public/tributes, roles: PUBLIC_ACCESS }
