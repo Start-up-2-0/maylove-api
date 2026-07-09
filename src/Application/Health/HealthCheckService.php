@@ -6,13 +6,11 @@ namespace App\Application\Health;
 
 use App\Infrastructure\Storage\StorageApiClient;
 use Doctrine\DBAL\Connection;
-use Predis\Client;
 
 final class HealthCheckService
 {
     public function __construct(
         private readonly Connection $connection,
-        private readonly Client $redis,
         private readonly StorageApiClient $storageApiClient,
     ) {
     }
@@ -24,7 +22,6 @@ final class HealthCheckService
     {
         $checks = [
             'database' => $this->checkDatabase(),
-            'redis' => $this->checkRedis(),
             'storage_api' => $this->checkStorageApi(),
         ];
 
@@ -41,17 +38,6 @@ final class HealthCheckService
     {
         try {
             $this->connection->executeQuery('SELECT 1');
-
-            return 'ok';
-        } catch (\Throwable) {
-            return 'error';
-        }
-    }
-
-    private function checkRedis(): string
-    {
-        try {
-            $this->redis->ping();
 
             return 'ok';
         } catch (\Throwable) {

@@ -3,12 +3,7 @@ FROM php:8.2-cli-alpine
 RUN apk add --no-cache \
         icu-dev \
         oniguruma-dev \
-        linux-headers \
-        $PHPIZE_DEPS \
-    && docker-php-ext-install -j"$(nproc)" intl pdo pdo_mysql opcache \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del $PHPIZE_DEPS
+    && docker-php-ext-install -j"$(nproc)" intl pdo pdo_mysql opcache
 
 COPY docker/php-railway.ini /usr/local/etc/php/conf.d/99-railway.ini
 

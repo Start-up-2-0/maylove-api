@@ -6,7 +6,6 @@ API principal do MayLove (Symfony 7 + MySQL 8).
 
 - Symfony 7.2
 - MySQL 8 (Doctrine ORM)
-- Redis (cache + Messenger)
 - Arquitetura DDD pragmática (`Domain`, `Application`, `Infrastructure`, `UI/Http`)
 
 ## Autenticação
@@ -26,7 +25,7 @@ cp .env.example .env
 docker compose up --build
 docker compose exec maylove-api php bin/console doctrine:migrations:migrate --no-interaction
 
-# 3. Local (requer MySQL + Redis + maylove-storages em .env.local)
+# 3. Local (requer MySQL + maylove-storages em .env.local)
 composer install
 php -S 0.0.0.0:8080 -t public public/index.php
 ```
@@ -49,7 +48,7 @@ AUTH_EMAIL_VERIFICATION_HOURS=24
 ```
 
 Em **dev**, `MAIL_ENABLED=false` e `MAILER_DSN=null://null` desabilitam envio real.  
-Em **prod**, rode o worker: `php bin/console messenger:consume async -vv`
+Mensagens do Messenger rodam de forma **síncrona** (sem worker separado).
 
 ## Documentação
 

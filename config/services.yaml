@@ -112,7 +112,3 @@ services:
     App\Application\Tribute\TributePublishedDispatcher:
         arguments:
             $appUrl: '%app.url%'
-
-    Predis\Client:
-        arguments:
-            - '%env(REDIS_URL)%'

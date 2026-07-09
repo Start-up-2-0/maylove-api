@@ -11,12 +11,11 @@
 
 O `railway.toml` roda **migrations no pre-deploy**. Sem MySQL configurado, o deploy falha.
 
-### 1. Adicionar MySQL (e Redis) no environment
+### 1. Adicionar MySQL no environment
 
 No Railway, no environment correto (`production` ou `staging`):
 
 1. **+ New** → **Database** → **Add MySQL**
-2. **+ New** → **Database** → **Add Redis** (necessário para Messenger e health)
 
 Anote o nome do serviço MySQL (ex.: `MySQL`).
 
@@ -48,13 +47,11 @@ O nome do banco (`railway` ou `maylove`) vem do plugin; as migrations criam as t
 | `APP_ENV` | exatamente `prod` (não use `production` nem deixe vazio) |
 | `APP_SECRET` | gere um valor aleatório longo |
 | `BILLING_ENABLED` | `false` em teste/staging; `true` quando Mercado Pago estiver ativo |
-| `REDIS_URL` | referência → Redis → `REDIS_URL` ou `REDIS_PRIVATE_URL` |
-| `MESSENGER_TRANSPORT_DSN` | `${REDIS_URL}/messages` — ex.: `redis://default:pass@redis.railway.internal:6379/messages` |
 | `STORAGE_API_URL` | URL interna do maylove-storages (`http://<servico>.railway.internal:<PORT>`) |
 | `STORAGE_SERVICE_TOKEN_SECRET` | igual ao `SERVICE_TOKEN_SECRET` do storages |
 | `AUTH_TOKEN_SALT` | ≥ 32 caracteres |
 | `APP_URL` | URL do frontend |
-| `CORS_ALLOW_ORIGIN` | regex do domínio do app |
+| `CORS_ALLOW_ORIGIN` | regex do domínio do app (ex.: `^https://maylove-app-staging\.up\.railway\.app$`) |
 
 ### 4. Só então fazer deploy
 
@@ -66,7 +63,7 @@ Push em `staging`/`main` ou redeploy manual. Migrations pendentes rodam em dois 
 O servidor sobe **antes** das migrations no start para o Railway healthcheck não receber 502.
 
 Healthcheck do Railway: `GET /api/v1/health/live` (liveness, sempre 200).  
-Monitoramento completo: `GET /api/v1/health` (pode retornar 503 se Redis/DB/storage falharem).
+Monitoramento completo: `GET /api/v1/health` (pode retornar 503 se DB/storage falharem).
 
 ### Porta no Railway
 
@@ -95,35 +92,20 @@ O app escuta em `0.0.0.0:$PORT` (variável injetada pelo Railway). Em **Settings
 | `RAILWAY_TOKEN_STAGING` | Project token do environment **staging** |
 | `RAILWAY_TOKEN_PRODUCTION` | Project token do environment **production** |
 
-## Variables GitHub (worker Messenger)
-
-| Variable | Descrição |
-|----------|-----------|
-| `RAILWAY_WORKER_SERVICE_ID_STAGING` | Nome ou ID do serviço worker em staging |
-| `RAILWAY_WORKER_SERVICE_ID_PRODUCTION` | Nome ou ID do serviço worker em production |
-
-Se não configuradas, só o serviço web é deployado.
-
 ## Serviços Railway (por environment)
 
 ### Web (maylove-api)
 
 - `Dockerfile` + `railway.toml`
 - Health: `GET /api/v1/health`
-
-### Worker (maylove-api-worker)
-
-- Mesmo repositório, start command: `/usr/local/bin/start-worker.sh`
-- **Mesmas variáveis** do web (incluindo `DATABASE_URL` e Redis)
+- Messenger roda de forma **síncrona** no próprio processo web (sem worker Redis).
 
 ## Referências Railway (copiar no dashboard)
 
-Substitua `MySQL` / `Redis` pelo nome exato dos seus plugins:
+Substitua `MySQL` pelo nome exato do seu plugin:
 
 ```
 DATABASE_URL=${{MySQL.MYSQL_PRIVATE_URL}}
-REDIS_URL=${{Redis.REDIS_PRIVATE_URL}}
-MESSENGER_TRANSPORT_DSN=${{Redis.REDIS_PRIVATE_URL}}/messages
 ```
 
 Se `MYSQL_PRIVATE_URL` não existir no seu plugin, use `MYSQL_URL`.

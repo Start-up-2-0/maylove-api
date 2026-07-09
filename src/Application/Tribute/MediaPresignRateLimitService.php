@@ -4,30 +4,23 @@ declare(strict_types=1);
 
 namespace App\Application\Tribute;
 
-use Predis\Client;
+use App\Infrastructure\RateLimit\InMemoryRateLimiter;
 
 final class MediaPresignRateLimitService
 {
     public function __construct(
-        private readonly Client $redis,
+        private readonly InMemoryRateLimiter $rateLimiter,
     ) {
     }
 
     public function canPresign(string $tributeId): bool
     {
-        $attempts = (int) $this->redis->get($this->key($tributeId));
-
-        return $attempts < 30;
+        return $this->rateLimiter->get($this->key($tributeId)) < 30;
     }
 
     public function registerPresign(string $tributeId): void
     {
-        $key = $this->key($tributeId);
-        $attempts = $this->redis->incr($key);
-
-        if ($attempts === 1) {
-            $this->redis->expire($key, 3600);
-        }
+        $this->rateLimiter->increment($this->key($tributeId), 3600);
     }
 
     private function key(string $tributeId): string

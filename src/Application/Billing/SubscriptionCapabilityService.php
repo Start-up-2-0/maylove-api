@@ -4,20 +4,15 @@ declare(strict_types=1);
 
 namespace App\Application\Billing;
 
-use App\Domain\Billing\ProductBillingMode;
 use App\Domain\Tribute\BillingModeUsed;
 use App\Infrastructure\Persistence\Entity\Billing\UserSubscription;
 use App\Infrastructure\Persistence\Repository\Billing\UserSubscriptionRepository;
-use Predis\Client;
 use Symfony\Component\Uid\Uuid;
 
 final class SubscriptionCapabilityService
 {
-    private const CACHE_TTL = 300;
-
     public function __construct(
         private readonly UserSubscriptionRepository $subscriptionRepository,
-        private readonly Client $redis,
         private readonly bool $billingEnabled,
     ) {
     }
@@ -53,7 +48,7 @@ final class SubscriptionCapabilityService
 
     public function invalidateCache(string $userId): void
     {
-        $this->redis->del($this->cacheKey($userId));
+        // Sem cache externo no MVP.
     }
 
     private function resolveActiveSubscription(string $userId): ?UserSubscription
@@ -62,32 +57,11 @@ final class SubscriptionCapabilityService
             return null;
         }
 
-        $cacheKey = $this->cacheKey($userId);
-        $cached = $this->redis->get($cacheKey);
-        if ($cached === '0') {
-            return null;
-        }
-        if (is_string($cached) && $cached !== '' && $cached !== '0') {
-            $subscription = $this->subscriptionRepository->findByUserId(Uuid::fromString($userId));
-            if ($subscription !== null && (string) $subscription->getId() === $cached && $subscription->hasActiveBenefit()) {
-                return $subscription;
-            }
-        }
-
         $subscription = $this->subscriptionRepository->findByUserId(Uuid::fromString($userId));
         if ($subscription === null || !$subscription->hasActiveBenefit()) {
-            $this->redis->setex($cacheKey, self::CACHE_TTL, '0');
-
             return null;
         }
 
-        $this->redis->setex($cacheKey, self::CACHE_TTL, (string) $subscription->getId());
-
         return $subscription;
-    }
-
-    private function cacheKey(string $userId): string
-    {
-        return 'subscription:active:'.$userId;
     }
 }

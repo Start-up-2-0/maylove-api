@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Auth;
 
-use Predis\Client;
+use App\Infrastructure\RateLimit\InMemoryRateLimiter;
 
 final class LoginRateLimitService
 {
@@ -12,26 +12,18 @@ final class LoginRateLimitService
     private const WINDOW_SECONDS = 900;
 
     public function __construct(
-        private readonly Client $redis,
+        private readonly InMemoryRateLimiter $rateLimiter,
     ) {
     }
 
     public function canAttempt(string $ip): bool
     {
-        $key = $this->key($ip);
-        $attempts = (int) $this->redis->get($key);
-
-        return $attempts < self::MAX_ATTEMPTS;
+        return $this->rateLimiter->get($this->key($ip)) < self::MAX_ATTEMPTS;
     }
 
     public function registerFailure(string $ip): void
     {
-        $key = $this->key($ip);
-        $attempts = $this->redis->incr($key);
-
-        if ($attempts === 1) {
-            $this->redis->expire($key, self::WINDOW_SECONDS);
-        }
+        $this->rateLimiter->increment($this->key($ip), self::WINDOW_SECONDS);
     }
 
     private function key(string $ip): string
