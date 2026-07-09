@@ -262,16 +262,6 @@ final class TributeService
         return $tribute;
     }
 
-    public function archive(Tribute $tribute): void
-    {
-        if ($tribute->getStatus() === TributeStatus::Archived) {
-            return;
-        }
-
-        $tribute->archive();
-        $this->tributeRepository->save($tribute);
-    }
-
     /**
      * Mescla, com validação, as chaves de personalização da experiência no
      * content_json. Estilo de apresentação, fontes, plano de fundo, ordem das

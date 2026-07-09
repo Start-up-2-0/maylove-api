@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\UI\Http\Controller\Tribute;
 
+use App\Application\Tribute\TributeArchiveService;
 use App\Application\Tribute\TributeCheckoutService;
 use App\Application\Tribute\TributePublishService;
 use App\Application\Tribute\TributeSerializer;
@@ -24,6 +25,7 @@ final class TributeController extends AbstractController
 {
     public function __construct(
         private readonly TributeService $tributeService,
+        private readonly TributeArchiveService $archiveService,
         private readonly TributeValidationService $validationService,
         private readonly TributePublishService $publishService,
         private readonly TributeCheckoutService $checkoutService,
@@ -121,7 +123,7 @@ final class TributeController extends AbstractController
         }
 
         $tribute = $this->tributeService->getOwned($id, $user->getUser());
-        $this->tributeService->archive($tribute);
+        $this->archiveService->archive($tribute);
 
         return ApiResponse::success('Homenagem excluída.');
     }
