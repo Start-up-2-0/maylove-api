@@ -37,9 +37,30 @@ final class TributeViewRepository extends ServiceEntityRepository
         }
 
         return [
-            'first_viewed_at' => $result['first_viewed_at'],
-            'last_viewed_at' => $result['last_viewed_at'],
+            'first_viewed_at' => $this->normalizeDateTime($result['first_viewed_at'] ?? null),
+            'last_viewed_at' => $this->normalizeDateTime($result['last_viewed_at'] ?? null),
         ];
+    }
+
+    private function normalizeDateTime(mixed $value): ?\DateTimeImmutable
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeImmutable) {
+            return $value;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return \DateTimeImmutable::createFromInterface($value);
+        }
+
+        if (is_string($value) && $value !== '') {
+            return new \DateTimeImmutable($value);
+        }
+
+        return null;
     }
 
     public function save(TributeView $view): void
