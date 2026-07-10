@@ -57,7 +57,16 @@ final class TributeValidationService
                     $description = isset($item['description']) && is_string($item['description'])
                         ? trim(strip_tags($item['description']))
                         : '';
+                    $photoUrl = isset($item['photo_url']) && is_string($item['photo_url']) ? trim($item['photo_url']) : '';
+                    $photoMediaId = isset($item['photo_media_id']) && is_string($item['photo_media_id'])
+                        ? trim($item['photo_media_id'])
+                        : '';
+                    if ($title === '' && $description === '' && $photoUrl === '' && $photoMediaId === '') {
+                        continue;
+                    }
                     if ($title !== '' || $description !== '') {
+                        ++$filledMoments;
+                    } elseif ($photoUrl !== '' || $photoMediaId !== '') {
                         ++$filledMoments;
                     }
                 }

@@ -402,8 +402,16 @@ final class TributeService
                         throw new TributeException('Item da linha do tempo inválido.', 'VALIDATION_ERROR', 400);
                     }
                     $title = isset($item['title']) && is_string($item['title']) ? trim($item['title']) : '';
-                    if ($title === '') {
+                    $description = isset($item['description']) && is_string($item['description']) ? trim($item['description']) : '';
+                    $photoUrl = isset($item['photo_url']) && is_string($item['photo_url']) ? trim($item['photo_url']) : '';
+                    $photoMediaId = isset($item['photo_media_id']) && is_string($item['photo_media_id'])
+                        ? trim($item['photo_media_id'])
+                        : '';
+                    if ($title === '' && $description === '' && $photoUrl === '' && $photoMediaId === '') {
                         continue;
+                    }
+                    if ($title === '') {
+                        $title = $this->fallbackTimelineTitle($description);
                     }
                     $entry = ['title' => mb_substr($title, 0, 160)];
                     foreach (['date' => 40, 'description' => 2000] as $field => $max) {
@@ -411,8 +419,11 @@ final class TributeService
                             $entry[$field] = mb_substr(trim($item[$field]), 0, $max);
                         }
                     }
-                    if (isset($item['photo_url']) && is_string($item['photo_url']) && trim($item['photo_url']) !== '') {
-                        $entry['photo_url'] = mb_substr(trim($item['photo_url']), 0, 500);
+                    if ($photoUrl !== '') {
+                        $entry['photo_url'] = mb_substr($photoUrl, 0, 500);
+                    }
+                    if ($photoMediaId !== '') {
+                        $entry['photo_media_id'] = mb_substr($photoMediaId, 0, 64);
                     }
                     $clean[] = $entry;
                 }
@@ -498,6 +509,17 @@ final class TributeService
         }
 
         return $content;
+    }
+
+    private function fallbackTimelineTitle(string $description): string
+    {
+        $plain = trim(preg_replace('/<[^>]*>/', '', $description) ?? '');
+        $plain = preg_replace('/\s+/', ' ', $plain) ?? '';
+        if ($plain === '') {
+            return 'Momento';
+        }
+
+        return mb_strlen($plain) > 60 ? mb_substr($plain, 0, 57).'...' : $plain;
     }
 
     private function assertEditable(Tribute $tribute): void
