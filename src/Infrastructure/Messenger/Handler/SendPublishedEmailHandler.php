@@ -27,7 +27,7 @@ final class SendPublishedEmailHandler
 
         $this->emailGateway->send(
             $message->recipientEmail,
-            'Sua homenagem está no ar — MayLove',
+            'Sua homenagem está no ar — MayLov',
             $html,
             $message->messageId,
         );

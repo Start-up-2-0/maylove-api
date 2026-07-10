@@ -1,6 +1,6 @@
 # maylove-api
 
-API principal do MayLove (Symfony 7 + MySQL 8).
+API principal do MayLov (Symfony 7 + MySQL 8).
 
 ## Stack
 
@@ -41,7 +41,7 @@ Port do Glow Up Connect (`ProvedorMensagemEmail` + fila assíncrona):
 
 ```env
 MAIL_ENABLED=true
-MAIL_FROM="MayLove <noreply@maylove.com.br>"
+MAIL_FROM="MayLov <noreply@maylove.com.br>"
 MAILER_DSN=resend+api://re_sua_api_key@default
 APP_URL=http://localhost:5173
 AUTH_EMAIL_VERIFICATION_HOURS=24

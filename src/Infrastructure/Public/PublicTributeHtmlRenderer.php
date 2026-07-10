@@ -10,7 +10,7 @@ final class PublicTributeHtmlRenderer
 {
     public function render(Tribute $tribute, string $canonicalUrl, string $frontendUrl, ?string $ogImageUrl): string
     {
-        $title = $this->escape($tribute->getTitle() ?: $tribute->getHonoreeName() ?: 'MayLove');
+        $title = $this->escape($tribute->getTitle() ?: $tribute->getHonoreeName() ?: 'MayLov');
         $description = $this->escape($this->buildDescription($tribute));
         $canonical = $this->escape($canonicalUrl);
         $ogImage = $ogImageUrl !== null && $ogImageUrl !== '' ? $this->escape($ogImageUrl) : '';
@@ -27,7 +27,7 @@ final class PublicTributeHtmlRenderer
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{$title} | MayLove</title>
+    <title>{$title} | MayLov</title>
     <meta name="description" content="{$description}">
     <link rel="canonical" href="{$canonical}">
     <meta property="og:type" content="website">
@@ -52,7 +52,7 @@ HTML;
     {
         $message = trim(strip_tags((string) $tribute->getMessage()));
         if ($message === '') {
-            return 'Uma homenagem especial feita com MayLove.';
+            return 'Uma homenagem especial feita com MayLov.';
         }
 
         if (mb_strlen($message) > 160) {

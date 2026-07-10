@@ -26,7 +26,7 @@ final class SendWelcomeEmailHandler
 
         $this->emailGateway->send(
             $message->recipientEmail,
-            'Bem-vindo ao MayLove',
+            'Bem-vindo ao MayLov',
             $html,
             $message->messageId,
         );

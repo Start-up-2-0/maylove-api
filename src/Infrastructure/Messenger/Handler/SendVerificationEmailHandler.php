@@ -27,7 +27,7 @@ final class SendVerificationEmailHandler
 
         $this->emailGateway->send(
             $message->recipientEmail,
-            'Confirme seu cadastro no MayLove',
+            'Confirme seu cadastro no MayLov',
             $html,
             $message->messageId,
         );

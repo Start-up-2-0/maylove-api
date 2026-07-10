@@ -48,7 +48,7 @@ final class GenerateOgImageHandler
             $result = $this->storageApiClient->generateOgImage(
                 $message->tributeId,
                 $sourceFileId,
-                $tribute->getTitle() ?? $tribute->getHonoreeName() ?? 'MayLove',
+                $tribute->getTitle() ?? $tribute->getHonoreeName() ?? 'MayLov',
                 $tribute->getColorPrimary() ?? $tribute->getTemplate()->getPrimaryColor(),
             );
 

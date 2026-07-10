@@ -96,7 +96,7 @@ final class AuthController extends AbstractController
             return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
         }
 
-        return ApiResponse::success('E-mail confirmado com sucesso. Você já pode usar o MayLove.', [
+        return ApiResponse::success('E-mail confirmado com sucesso. Você já pode usar o MayLov.', [
             'id' => (string) $user->getId(),
             'email' => $user->getEmail(),
             'email_verified' => $user->isEmailVerified(),

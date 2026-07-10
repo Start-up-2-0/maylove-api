@@ -172,7 +172,7 @@ final class SubscriptionService
 
         return [
             'items' => [[
-                'title' => 'MayLove Premium — Assinatura',
+                'title' => 'MayLov Premium — Assinatura',
                 'quantity' => 1,
                 'unit_price' => $price->getPriceAmount(),
                 'currency_id' => 'BRL',

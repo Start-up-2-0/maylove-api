@@ -125,7 +125,7 @@ final class OrderCheckoutService
      */
     private function buildPreference(User $user, Tribute $tribute, Order $order, \App\Infrastructure\Persistence\Entity\Billing\ProductPrice $price): array
     {
-        $title = $tribute->getTitle() ?: 'Homenagem MayLove';
+        $title = $tribute->getTitle() ?: 'Homenagem MayLov';
 
         return [
             'items' => [[
