@@ -14,6 +14,8 @@ final class AuthRefreshCookie
 
     public static function set(Response $response, string $refreshToken, \DateTimeImmutable $expiresAt, bool $secure): void
     {
+        $sameSite = $secure ? Cookie::SAMESITE_NONE : Cookie::SAMESITE_LAX;
+
         $response->headers->setCookie(
             Cookie::create(self::NAME)
                 ->withValue($refreshToken)
@@ -21,13 +23,22 @@ final class AuthRefreshCookie
                 ->withPath('/api/v1/auth')
                 ->withSecure($secure)
                 ->withHttpOnly(true)
-                ->withSameSite(Cookie::SAMESITE_LAX),
+                ->withSameSite($sameSite),
         );
     }
 
-    public static function clear(Response $response): void
+    public static function clear(Response $response, bool $secure = false): void
     {
-        $response->headers->clearCookie(self::NAME, '/api/v1/auth');
+        $sameSite = $secure ? Cookie::SAMESITE_NONE : Cookie::SAMESITE_LAX;
+
+        $response->headers->clearCookie(
+            self::NAME,
+            '/api/v1/auth',
+            null,
+            $secure,
+            true,
+            $sameSite,
+        );
     }
 
     public static function resolve(Request $request, ?string $bodyToken): ?string

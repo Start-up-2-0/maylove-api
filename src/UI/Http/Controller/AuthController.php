@@ -204,7 +204,7 @@ final class AuthController extends AbstractController
         }
 
         $response = ApiResponse::success('Logout realizado com sucesso.');
-        AuthRefreshCookie::clear($response);
+        AuthRefreshCookie::clear($response, $this->cookieSecure);
 
         return $response;
     }
