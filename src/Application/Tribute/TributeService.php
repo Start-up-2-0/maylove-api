@@ -153,17 +153,6 @@ final class TributeService
             $tribute->setSpecialDate($this->parseDate($payload['special_date']));
         }
 
-        if (array_key_exists('slug', $payload) && $payload['slug'] !== null) {
-            $slug = strtolower(trim((string) $payload['slug']));
-            if (!$this->slugGenerator->isValidFormat($slug)) {
-                throw new TributeException('Slug inválido.', 'INVALID_SLUG', 400);
-            }
-            if ($this->tributeRepository->existsBySlug($slug, $tribute->getId())) {
-                throw new TributeException('Este slug já está em uso.', 'SLUG_ALREADY_EXISTS', 409);
-            }
-            $tribute->setSlug($slug);
-        }
-
         if (array_key_exists('color_primary', $payload) && $payload['color_primary'] !== null) {
             $color = (string) $payload['color_primary'];
             if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $color)) {

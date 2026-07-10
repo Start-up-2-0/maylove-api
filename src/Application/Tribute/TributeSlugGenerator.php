@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Tribute;
 
 use App\Infrastructure\Persistence\Repository\TributeRepository;
+use Symfony\Component\Uid\Uuid;
 
 final class TributeSlugGenerator
 {
@@ -15,24 +16,11 @@ final class TributeSlugGenerator
 
     public function generateUnique(?string $base = null): string
     {
-        $slugBase = $this->slugify($base ?? 'homenagem');
-        if ($slugBase === '') {
-            $slugBase = 'homenagem';
-        }
+        do {
+            $candidate = $this->truncate('homenagem-'.Uuid::v4()->toRfc4122());
+        } while ($this->tributeRepository->existsBySlug($candidate));
 
-        $candidate = $this->truncate($slugBase);
-        if (!$this->tributeRepository->existsBySlug($candidate)) {
-            return $candidate;
-        }
-
-        for ($suffix = 2; $suffix <= 999; ++$suffix) {
-            $candidate = $this->truncate($slugBase.'-'.$suffix);
-            if (!$this->tributeRepository->existsBySlug($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return $this->truncate($slugBase.'-'.bin2hex(random_bytes(4)));
+        return $candidate;
     }
 
     public function slugify(string $value): string
