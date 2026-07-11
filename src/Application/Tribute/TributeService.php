@@ -437,6 +437,21 @@ final class TributeService
             }
         }
 
+        // Toggles de textos opcionais (abertura/despedida em layouts narrativos).
+        foreach (['include_opening_message', 'include_closing_message'] as $key) {
+            if (!array_key_exists($key, $incoming)) {
+                continue;
+            }
+            $value = $incoming[$key];
+            if ($value === null) {
+                unset($content[$key]);
+            } elseif (is_bool($value)) {
+                $content[$key] = $value;
+            } else {
+                throw new TributeException(sprintf('Valor inválido para %s.', $key), 'VALIDATION_ERROR', 400);
+            }
+        }
+
         if (array_key_exists('music_duration_seconds', $incoming)) {
             $duration = $incoming['music_duration_seconds'];
             if ($duration === null) {
