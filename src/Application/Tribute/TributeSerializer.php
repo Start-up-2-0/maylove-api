@@ -46,6 +46,7 @@ final class TributeSerializer
                 'name' => $tribute->getTemplate()->getName(),
             ],
             'color_primary' => $tribute->getColorPrimary(),
+            'presentation' => $this->resolvePresentation($tribute),
             'views_count' => $tribute->getViewsCount(),
             'published_at' => $tribute->getPublishedAt()?->format(\DateTimeInterface::ATOM),
             'created_at' => $tribute->getCreatedAt()->format(\DateTimeInterface::ATOM),
@@ -150,5 +151,13 @@ final class TributeSerializer
             'has_music' => $tribute->getMusicSource() !== MusicSource::None,
             'published_at' => $tribute->getPublishedAt()?->format(\DateTimeInterface::ATOM),
         ];
+    }
+
+    private function resolvePresentation(Tribute $tribute): ?string
+    {
+        $content = $tribute->getContentJson();
+        $presentation = $content['presentation'] ?? null;
+
+        return is_string($presentation) && $presentation !== '' ? $presentation : null;
     }
 }
