@@ -84,10 +84,12 @@ final class AlbumSerializer
 
         if ($includeUrl) {
             try {
-                $payload['url'] = $this->storageApiClient->getFileUrl(
+                $urlData = $this->storageApiClient->getFileUrl(
                     $media->getStorageFileId(),
+                    'protected',
                     self::MEDIA_URL_TTL,
                 );
+                $payload['url'] = isset($urlData['url']) ? (string) $urlData['url'] : null;
             } catch (\Throwable) {
                 $payload['url'] = null;
             }

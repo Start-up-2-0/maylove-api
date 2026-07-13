@@ -61,7 +61,12 @@ final class PublicAlbumSerializer
     {
         $url = null;
         try {
-            $url = $this->storageApiClient->getFileUrl($media->getStorageFileId(), self::MEDIA_URL_TTL);
+            $urlData = $this->storageApiClient->getFileUrl(
+                $media->getStorageFileId(),
+                'protected',
+                self::MEDIA_URL_TTL,
+            );
+            $url = isset($urlData['url']) ? (string) $urlData['url'] : null;
         } catch (\Throwable) {
         }
 
