@@ -6,7 +6,9 @@ namespace App\Application\Album;
 
 use App\Application\Media\MediaUploadPolicy;
 use App\Domain\Album\AlbumMediaType;
+use App\Domain\Album\BookPresentation;
 use App\Infrastructure\Persistence\Entity\Album;
+use App\Infrastructure\Persistence\Entity\AlbumMedia;
 use App\Infrastructure\Persistence\Repository\AlbumMediaRepository;
 
 final class AlbumValidationService
@@ -43,10 +45,62 @@ final class AlbumValidationService
             );
         }
 
+        if ($album->getPresentation() === BookPresentation::Timeline) {
+            $errors = [...$errors, ...$this->validateTimelinePhotos($album)];
+        }
+
         return [
             'valid' => $errors === [],
             'errors' => $errors,
         ];
+    }
+
+    /**
+     * @return list<array<string, string>>
+     */
+    private function validateTimelinePhotos(Album $album): array
+    {
+        $errors = [];
+        $index = 0;
+
+        foreach ($this->mediaRepository->findActiveByAlbum($album) as $media) {
+            if ($media->getMediaType() !== AlbumMediaType::Photo) {
+                continue;
+            }
+
+            ++$index;
+            $label = sprintf('Foto %d', $index);
+            $errors = [...$errors, ...$this->validateTimelinePhoto($media, $label)];
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @return list<array<string, string>>
+     */
+    private function validateTimelinePhoto(AlbumMedia $media, string $label): array
+    {
+        $errors = [];
+        $memoryDate = trim((string) $media->getMemoryDate());
+        $title = trim((string) $media->getTitle());
+        $caption = trim((string) $media->getCaption());
+
+        if ($memoryDate === '') {
+            $errors[] = $this->issue('photos', 'TIMELINE_DATE_REQUIRED', sprintf('%s: informe a data do momento.', $label));
+        } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $memoryDate)) {
+            $errors[] = $this->issue('photos', 'TIMELINE_DATE_INVALID', sprintf('%s: use uma data válida.', $label));
+        }
+
+        if ($title === '') {
+            $errors[] = $this->issue('photos', 'TIMELINE_TITLE_REQUIRED', sprintf('%s: informe o título do momento.', $label));
+        }
+
+        if ($caption === '') {
+            $errors[] = $this->issue('photos', 'TIMELINE_DESCRIPTION_REQUIRED', sprintf('%s: informe a descrição do momento.', $label));
+        }
+
+        return $errors;
     }
 
     /**
