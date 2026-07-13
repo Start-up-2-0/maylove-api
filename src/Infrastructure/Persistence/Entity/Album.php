@@ -47,7 +47,7 @@ class Album
     private ?string $colorPrimary = '#c45d7a';
 
     #[ORM\Column(length: 40, enumType: BookPresentation::class)]
-    private BookPresentation $presentation = BookPresentation::FamilyAlbum;
+    private BookPresentation $presentation = BookPresentation::ClassicPhotobook;
 
     #[ORM\Column(name: 'photos_per_page', type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 1])]
     private int $photosPerPage = 1;
