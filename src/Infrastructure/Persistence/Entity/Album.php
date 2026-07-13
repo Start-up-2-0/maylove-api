@@ -49,6 +49,9 @@ class Album
     #[ORM\Column(length: 40, enumType: BookPresentation::class)]
     private BookPresentation $presentation = BookPresentation::FamilyAlbum;
 
+    #[ORM\Column(name: 'photos_per_page', type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 1])]
+    private int $photosPerPage = 1;
+
     #[ORM\Column(name: 'music_media_id', type: 'uuid', nullable: true)]
     private ?Uuid $musicMediaId = null;
 
@@ -179,6 +182,17 @@ class Album
     public function setPresentation(BookPresentation $presentation): void
     {
         $this->presentation = $presentation;
+        $this->touch();
+    }
+
+    public function getPhotosPerPage(): int
+    {
+        return $this->photosPerPage;
+    }
+
+    public function setPhotosPerPage(int $photosPerPage): void
+    {
+        $this->photosPerPage = max(1, min(4, $photosPerPage));
         $this->touch();
     }
 

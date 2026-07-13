@@ -108,6 +108,17 @@ final class AlbumService
             }
             $album->setPresentation($presentation);
         }
+        if (array_key_exists('photos_per_page', $payload)) {
+            $perPage = (int) $payload['photos_per_page'];
+            if ($perPage < 1 || $perPage > 4) {
+                throw new AlbumException(
+                    'Fotos por página deve ser entre 1 e 4.',
+                    'INVALID_PHOTOS_PER_PAGE',
+                    422,
+                );
+            }
+            $album->setPhotosPerPage($perPage);
+        }
 
         if (isset($payload['pages']) && is_array($payload['pages'])) {
             $this->syncPageMetadata($album, $payload['pages']);

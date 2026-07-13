@@ -33,6 +33,7 @@ final class AlbumSerializer
             'subtitle' => $album->getSubtitle(),
             'color_primary' => $album->getColorPrimary(),
             'presentation' => $album->getPresentation()->value,
+            'photos_per_page' => $album->getPhotosPerPage(),
             'is_public' => $album->isPublic(),
             'photo_count' => $this->mediaRepository->countActiveByAlbumAndType($album, AlbumMediaType::Photo),
             'views_count' => $album->getViewsCount(),
