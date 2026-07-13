@@ -17,6 +17,11 @@ final class PublicAlbumQueryService
 
     public function getPublishedBySlug(string $slug): Album
     {
+        $slug = trim($slug);
+        if ($slug === '') {
+            throw new AlbumException('Álbum não encontrado.', 'ALBUM_NOT_FOUND', 404);
+        }
+
         $album = $this->albumRepository->findPublishedBySlug($slug);
         if ($album === null) {
             throw new AlbumException('Álbum não encontrado.', 'ALBUM_NOT_FOUND', 404);

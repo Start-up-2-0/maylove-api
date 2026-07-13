@@ -18,8 +18,9 @@ final class AlbumViewService
 
     public function recordView(string $slug, string $sessionId): void
     {
-        if (trim($sessionId) === '') {
-            throw new AlbumException('session_id é obrigatório.', 'VALIDATION_ERROR', 400);
+        $sessionId = trim($sessionId);
+        if ($sessionId === '' || !Uuid::isValid($sessionId)) {
+            throw new AlbumException('session_id inválido.', 'VALIDATION_ERROR', 400);
         }
 
         $album = $this->queryService->getPublishedBySlug($slug);

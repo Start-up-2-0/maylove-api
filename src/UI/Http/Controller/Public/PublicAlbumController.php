@@ -7,7 +7,6 @@ namespace App\UI\Http\Controller\Public;
 use App\Application\Public\AlbumViewService;
 use App\Application\Public\PublicAlbumQueryService;
 use App\Application\Public\PublicAlbumSerializer;
-use App\Domain\Album\Exception\AlbumException;
 use App\UI\Http\ApiResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,13 +27,9 @@ final class PublicAlbumController extends AbstractController
     #[Route('/{slug}', name: 'show', methods: ['GET'])]
     public function show(string $slug): JsonResponse
     {
-        try {
-            $album = $this->queryService->getPublishedBySlug($slug);
+        $album = $this->queryService->getPublishedBySlug($slug);
 
-            return ApiResponse::success('OK', $this->serializer->serialize($album));
-        } catch (AlbumException $exception) {
-            return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
-        }
+        return ApiResponse::success('OK', $this->serializer->serialize($album));
     }
 
     #[Route('/{slug}/view', name: 'view', methods: ['POST'])]
@@ -43,12 +38,8 @@ final class PublicAlbumController extends AbstractController
         /** @var array{session_id?: string} $payload */
         $payload = json_decode($request->getContent(), true) ?? [];
 
-        try {
-            $this->viewService->recordView($slug, (string) ($payload['session_id'] ?? ''));
+        $this->viewService->recordView($slug, (string) ($payload['session_id'] ?? ''));
 
-            return new Response(null, Response::HTTP_NO_CONTENT);
-        } catch (AlbumException $exception) {
-            return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
-        }
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 }
