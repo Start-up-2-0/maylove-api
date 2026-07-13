@@ -46,6 +46,7 @@ final class PublicAlbumSerializer
             'closing_message' => $album->getClosingMessage(),
             'signature' => $album->getSignature(),
             'color_primary' => $album->getColorPrimary(),
+            'presentation' => $album->getPresentation()->value,
             'published_at' => $album->getPublishedAt()?->format(\DateTimeInterface::ATOM),
             'views_count' => $album->getViewsCount(),
             'photos' => array_map(fn (AlbumMedia $item) => $this->serializeMedia($item), $photos),
@@ -69,6 +70,7 @@ final class PublicAlbumSerializer
             'url' => $url,
             'title' => $media->getTitle(),
             'caption' => $media->getCaption(),
+            'memory_date' => $media->getMemoryDate(),
             'sort_order' => $media->getSortOrder(),
         ];
     }

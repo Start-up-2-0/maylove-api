@@ -5,15 +5,9 @@ declare(strict_types=1);
 namespace App\Application\Album;
 
 use App\Domain\Album\AlbumMediaType;
-use App\Domain\Album\AlbumStatus;
-use App\Domain\Album\Exception\AlbumException;
-use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\AlbumMedia;
-use App\Infrastructure\Persistence\Entity\User;
 use App\Infrastructure\Persistence\Repository\AlbumMediaRepository;
-use App\Infrastructure\Persistence\Repository\AlbumRepository;
-use App\Infrastructure\Persistence\Repository\UserRepository;
 use App\Infrastructure\Storage\StorageApiClient;
 
 final class AlbumSerializer
@@ -38,6 +32,7 @@ final class AlbumSerializer
             'title' => $album->getTitle(),
             'subtitle' => $album->getSubtitle(),
             'color_primary' => $album->getColorPrimary(),
+            'presentation' => $album->getPresentation()->value,
             'is_public' => $album->isPublic(),
             'photo_count' => $this->mediaRepository->countActiveByAlbumAndType($album, AlbumMediaType::Photo),
             'views_count' => $album->getViewsCount(),
@@ -82,6 +77,7 @@ final class AlbumSerializer
             'sort_order' => $media->getSortOrder(),
             'title' => $media->getTitle(),
             'caption' => $media->getCaption(),
+            'memory_date' => $media->getMemoryDate(),
             'url_thumbnail' => $media->getUrlThumbnail(),
             'created_at' => $media->getCreatedAt()->format(\DateTimeInterface::ATOM),
         ];

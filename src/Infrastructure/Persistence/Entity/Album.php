@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Entity;
 
 use App\Domain\Album\AlbumStatus;
+use App\Domain\Album\BookPresentation;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -44,6 +45,9 @@ class Album
 
     #[ORM\Column(name: 'color_primary', length: 7, nullable: true)]
     private ?string $colorPrimary = '#c45d7a';
+
+    #[ORM\Column(length: 40, enumType: BookPresentation::class)]
+    private BookPresentation $presentation = BookPresentation::FamilyAlbum;
 
     #[ORM\Column(name: 'music_media_id', type: 'uuid', nullable: true)]
     private ?Uuid $musicMediaId = null;
@@ -164,6 +168,17 @@ class Album
     public function setColorPrimary(?string $colorPrimary): void
     {
         $this->colorPrimary = $colorPrimary;
+        $this->touch();
+    }
+
+    public function getPresentation(): BookPresentation
+    {
+        return $this->presentation;
+    }
+
+    public function setPresentation(BookPresentation $presentation): void
+    {
+        $this->presentation = $presentation;
         $this->touch();
     }
 

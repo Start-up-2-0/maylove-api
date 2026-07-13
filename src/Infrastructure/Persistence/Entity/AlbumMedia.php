@@ -46,6 +46,9 @@ class AlbumMedia
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $caption = null;
 
+    #[ORM\Column(name: 'memory_date', length: 50, nullable: true)]
+    private ?string $memoryDate = null;
+
     #[ORM\Column(name: 'url_thumbnail', length: 500, nullable: true)]
     private ?string $urlThumbnail = null;
 
@@ -144,6 +147,16 @@ class AlbumMedia
     public function setCaption(?string $caption): void
     {
         $this->caption = $caption;
+    }
+
+    public function getMemoryDate(): ?string
+    {
+        return $this->memoryDate;
+    }
+
+    public function setMemoryDate(?string $memoryDate): void
+    {
+        $this->memoryDate = $memoryDate !== null ? trim($memoryDate) : null;
     }
 
     public function getUrlThumbnail(): ?string

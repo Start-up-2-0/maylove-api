@@ -8,6 +8,7 @@ use App\Application\Album\AlbumPublishService;
 use App\Application\Album\AlbumSerializer;
 use App\Application\Album\AlbumService;
 use App\Application\Album\AlbumValidationService;
+use App\Application\Album\BookPresentationCatalogService;
 use App\Application\Media\MediaUploadPolicy;
 use App\Domain\Album\Exception\AlbumException;
 use App\Infrastructure\Security\MayLoveUser;
@@ -28,7 +29,14 @@ final class AlbumController extends AbstractController
         private readonly AlbumPublishService $publishService,
         private readonly AlbumSerializer $serializer,
         private readonly MediaUploadPolicy $uploadPolicy,
+        private readonly BookPresentationCatalogService $bookPresentationCatalog,
     ) {
+    }
+
+    #[Route('/book-presentations', name: 'book_presentations', methods: ['GET'])]
+    public function bookPresentations(): JsonResponse
+    {
+        return ApiResponse::success('OK', $this->bookPresentationCatalog->list());
     }
 
     #[Route('/upload-policy', name: 'upload_policy', methods: ['GET'])]

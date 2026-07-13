@@ -33,6 +33,7 @@ security:
         - { path: ^/api/v1/billing/product, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/music-tracks, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/public/tributes, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/albums/book-presentations, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/public/albums, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1, roles: IS_AUTHENTICATED_FULLY }
 

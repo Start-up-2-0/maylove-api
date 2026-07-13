@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Album;
 
 use App\Domain\Album\AlbumMediaType;
+use App\Domain\Album\BookPresentation;
 use App\Domain\Album\Exception\AlbumException;
 use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Persistence\Entity\Album;
@@ -100,6 +101,13 @@ final class AlbumService
         if (array_key_exists('is_public', $payload)) {
             $album->setIsPublic((bool) $payload['is_public']);
         }
+        if (array_key_exists('presentation', $payload)) {
+            $presentation = BookPresentation::tryFromId((string) $payload['presentation']);
+            if ($presentation === null) {
+                throw new AlbumException('Apresentação do livro inválida.', 'INVALID_PRESENTATION', 422);
+            }
+            $album->setPresentation($presentation);
+        }
 
         if (isset($payload['pages']) && is_array($payload['pages'])) {
             $this->syncPageMetadata($album, $payload['pages']);
@@ -138,6 +146,9 @@ final class AlbumService
             }
             if (array_key_exists('caption', $page)) {
                 $media->setCaption(is_string($page['caption']) ? $page['caption'] : null);
+            }
+            if (array_key_exists('memory_date', $page)) {
+                $media->setMemoryDate(is_string($page['memory_date']) ? $page['memory_date'] : null);
             }
             $this->mediaRepository->save($media);
         }
