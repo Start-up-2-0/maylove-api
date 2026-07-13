@@ -13,25 +13,45 @@ final class BookPresentationCatalogService
      */
     public function list(): array
     {
+        $canonical = [
+            BookPresentation::ClassicPhotobook,
+            BookPresentation::WeddingBook,
+            BookPresentation::FamilyMemories,
+            BookPresentation::PolaroidMemories,
+            BookPresentation::Scrapbook,
+            BookPresentation::TravelJournal,
+            BookPresentation::MagazineStyle,
+            BookPresentation::LuxuryAlbum,
+            BookPresentation::Timeline,
+        ];
+
         return array_map(
             fn (BookPresentation $presentation) => [
                 'id' => $presentation->value,
                 'name' => $presentation->label(),
                 'description' => $this->descriptionFor($presentation),
             ],
-            BookPresentation::cases(),
+            $canonical,
         );
     }
 
     private function descriptionFor(BookPresentation $presentation): string
     {
         return match ($presentation) {
-            BookPresentation::FamilyAlbum => 'Páginas afetivas com fotos coladas e anotações manuscritas.',
-            BookPresentation::Polaroid => 'Fotos em molduras Polaroid com textos ao lado.',
-            BookPresentation::MemoryNotebook => 'Diário ilustrado com papel texturizado e escrita à mão.',
-            BookPresentation::RomanticBook => 'Design elegante e minimalista para histórias de amor.',
-            BookPresentation::Timeline => 'Organização cronológica da sua história.',
-            BookPresentation::PhotoMagazine => 'Layout editorial moderno com fotos em destaque.',
+            BookPresentation::ClassicPhotobook => 'Minimalista e elegante. Tipografia refinada, margens generosas e fotos em destaque.',
+            BookPresentation::WeddingBook => 'Romântico e sofisticado. Composições assimétricas para histórias de casamento.',
+            BookPresentation::FamilyMemories => 'Álbum de família acolhedor. Páginas quentes com espaço para relatos e datas.',
+            BookPresentation::PolaroidMemories => 'Molduras instantâneas com anotações manuscritas na margem branca.',
+            BookPresentation::Scrapbook => 'Papéis texturizados, fitas e elementos artesanais com charme handmade.',
+            BookPresentation::TravelJournal => 'Diário de viagem editorial. Datas e relatos por destino.',
+            BookPresentation::MagazineStyle => 'Layout editorial ousado. Tipografia forte e fotos em múltiplas proporções.',
+            BookPresentation::LuxuryAlbum => 'Acabamento premium. Imagens grandes, pouco texto e muito espaço em branco.',
+            BookPresentation::Timeline => 'Momentos em ordem cronológica com rolagem vertical contínua.',
+            BookPresentation::FamilyAlbum => 'Álbum de família acolhedor. Páginas quentes com espaço para relatos e datas.',
+            BookPresentation::Polaroid => 'Molduras instantâneas com anotações manuscritas na margem branca.',
+            BookPresentation::MemoryNotebook => 'Diário de viagem editorial. Datas e relatos por destino.',
+            BookPresentation::RomanticBook => 'Romântico e sofisticado. Composições assimétricas para histórias de casamento.',
+            BookPresentation::PhotoMagazine => 'Layout editorial ousado. Tipografia forte e fotos em múltiplas proporções.',
         };
     }
 }
