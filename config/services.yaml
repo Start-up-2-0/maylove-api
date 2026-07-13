@@ -82,6 +82,10 @@ services:
         arguments:
             $emailVerificationEnabled: '%auth.email_verification_enabled%'
 
+    App\Application\Album\AlbumService:
+        arguments:
+            $emailVerificationEnabled: '%auth.email_verification_enabled%'
+
     App\Infrastructure\Security\MayLoveTokenAuthenticator:
         arguments:
             $tokenHeaderName: '%auth.token_header_name%'
