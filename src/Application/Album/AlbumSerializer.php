@@ -54,6 +54,8 @@ final class AlbumSerializer
         $data['music_media_id'] = $album->getMusicMediaId() !== null
             ? (string) $album->getMusicMediaId()
             : null;
+        $data['book_config'] = $album->getBookConfig();
+        $data['book_pages'] = $album->getBookPages();
         $media = $this->mediaRepository->findActiveByAlbum($album);
         $data['media'] = array_map(
             fn (AlbumMedia $item) => $this->serializeMedia($item, includeUrl: true),

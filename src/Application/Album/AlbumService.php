@@ -120,6 +120,41 @@ final class AlbumService
             $album->setPhotosPerPage($perPage);
         }
 
+        if (array_key_exists('book_config', $payload)) {
+            if ($payload['book_config'] === null) {
+                $album->setBookConfig(null);
+            } elseif (is_array($payload['book_config'])) {
+                /** @var array<string, mixed> $config */
+                $config = $payload['book_config'];
+                $album->setBookConfig($config);
+                if (isset($config['colors']) && is_array($config['colors']) && isset($config['colors']['accent'])) {
+                    $accent = $config['colors']['accent'];
+                    if (is_string($accent) && $accent !== '') {
+                        $album->setColorPrimary($accent);
+                    }
+                }
+            } else {
+                throw new AlbumException('book_config inválido.', 'INVALID_BOOK_CONFIG', 422);
+            }
+        }
+
+        if (array_key_exists('book_pages', $payload)) {
+            if ($payload['book_pages'] === null) {
+                $album->setBookPages(null);
+            } elseif (is_array($payload['book_pages'])) {
+                /** @var list<array<string, mixed>> $bookPages */
+                $bookPages = [];
+                foreach ($payload['book_pages'] as $page) {
+                    if (is_array($page)) {
+                        $bookPages[] = $page;
+                    }
+                }
+                $album->setBookPages($bookPages);
+            } else {
+                throw new AlbumException('book_pages inválido.', 'INVALID_BOOK_PAGES', 422);
+            }
+        }
+
         if (isset($payload['pages']) && is_array($payload['pages'])) {
             $this->syncPageMetadata($album, $payload['pages']);
         }

@@ -48,6 +48,8 @@ final class PublicAlbumSerializer
             'color_primary' => $album->getColorPrimary(),
             'presentation' => $album->getPresentation()->value,
             'photos_per_page' => $album->getPhotosPerPage(),
+            'book_config' => $album->getBookConfig(),
+            'book_pages' => $album->getBookPages(),
             'published_at' => $album->getPublishedAt()?->format(\DateTimeInterface::ATOM),
             'views_count' => $album->getViewsCount(),
             'photos' => array_map(fn (AlbumMedia $item) => $this->serializeMedia($item), $photos),

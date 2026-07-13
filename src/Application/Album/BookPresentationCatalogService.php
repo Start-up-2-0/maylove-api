@@ -13,22 +13,17 @@ final class BookPresentationCatalogService
      */
     public function list(): array
     {
+        // Catálogo público: só Memory Book (classic-photobook).
         $canonical = [
             BookPresentation::ClassicPhotobook,
-            BookPresentation::WeddingBook,
-            BookPresentation::FamilyMemories,
-            BookPresentation::PolaroidMemories,
-            BookPresentation::Scrapbook,
-            BookPresentation::TravelJournal,
-            BookPresentation::MagazineStyle,
-            BookPresentation::LuxuryAlbum,
-            BookPresentation::Timeline,
         ];
 
         return array_map(
             fn (BookPresentation $presentation) => [
                 'id' => $presentation->value,
-                'name' => $presentation->label(),
+                'name' => $presentation === BookPresentation::ClassicPhotobook
+                    ? 'Memory Book'
+                    : $presentation->label(),
                 'description' => $this->descriptionFor($presentation),
             ],
             $canonical,
@@ -38,7 +33,7 @@ final class BookPresentationCatalogService
     private function descriptionFor(BookPresentation $presentation): string
     {
         return match ($presentation) {
-            BookPresentation::ClassicPhotobook => 'Minimalista e elegante. Tipografia refinada, margens generosas e fotos em destaque.',
+            BookPresentation::ClassicPhotobook => 'Livro editorial personalizável: capa, cores e páginas sob seu controle.',
             BookPresentation::WeddingBook => 'Romântico e sofisticado. Composições assimétricas para histórias de casamento.',
             BookPresentation::FamilyMemories => 'Álbum de família acolhedor. Páginas quentes com espaço para relatos e datas.',
             BookPresentation::PolaroidMemories => 'Molduras instantâneas com anotações manuscritas na margem branca.',

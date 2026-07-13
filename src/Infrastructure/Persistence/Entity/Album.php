@@ -52,6 +52,14 @@ class Album
     #[ORM\Column(name: 'photos_per_page', type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 1])]
     private int $photosPerPage = 1;
 
+    /** @var array<string, mixed>|null */
+    #[ORM\Column(name: 'book_config', type: Types::JSON, nullable: true)]
+    private ?array $bookConfig = null;
+
+    /** @var list<array<string, mixed>>|null */
+    #[ORM\Column(name: 'book_pages', type: Types::JSON, nullable: true)]
+    private ?array $bookPages = null;
+
     #[ORM\Column(name: 'music_media_id', type: 'uuid', nullable: true)]
     private ?Uuid $musicMediaId = null;
 
@@ -193,6 +201,40 @@ class Album
     public function setPhotosPerPage(int $photosPerPage): void
     {
         $this->photosPerPage = max(1, min(4, $photosPerPage));
+        $this->touch();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getBookConfig(): ?array
+    {
+        return $this->bookConfig;
+    }
+
+    /**
+     * @param array<string, mixed>|null $bookConfig
+     */
+    public function setBookConfig(?array $bookConfig): void
+    {
+        $this->bookConfig = $bookConfig;
+        $this->touch();
+    }
+
+    /**
+     * @return list<array<string, mixed>>|null
+     */
+    public function getBookPages(): ?array
+    {
+        return $this->bookPages;
+    }
+
+    /**
+     * @param list<array<string, mixed>>|null $bookPages
+     */
+    public function setBookPages(?array $bookPages): void
+    {
+        $this->bookPages = $bookPages;
         $this->touch();
     }
 

@@ -26,7 +26,7 @@ enum BookPresentation: string
     public function label(): string
     {
         return match ($this) {
-            self::ClassicPhotobook => 'Classic Photobook',
+            self::ClassicPhotobook => 'Memory Book',
             self::WeddingBook => 'Wedding Book',
             self::FamilyMemories => 'Family Memories',
             self::PolaroidMemories => 'Polaroid Memories',
