@@ -18,6 +18,7 @@ final class BookPresentationCatalogService
             BookPresentation::ClassicPhotobook,
             BookPresentation::PolaroidBoard,
             BookPresentation::PortraitAlbum,
+            BookPresentation::InstantPhoto,
         ];
 
         return array_map(
@@ -39,6 +40,7 @@ final class BookPresentationCatalogService
             BookPresentation::PolaroidMemories => 'Molduras instantâneas com anotações manuscritas na margem branca.',
             BookPresentation::PolaroidBoard => 'Quadro com polaroids coladas, fitas e pins — um mural de memórias.',
             BookPresentation::PortraitAlbum => 'Página de álbum retrato: papel envelhecido, cantos e fotos com borda recortada.',
+            BookPresentation::InstantPhoto => 'Colagem só de fotos com moldura instantânea — ideal para família, casamento, aniversário e formatura.',
             BookPresentation::Scrapbook => 'Papéis texturizados, fitas e elementos artesanais com charme handmade.',
             BookPresentation::TravelJournal => 'Diário de viagem editorial. Datas e relatos por destino.',
             BookPresentation::MagazineStyle => 'Layout editorial ousado. Tipografia forte e fotos em múltiplas proporções.',

@@ -12,6 +12,7 @@ enum BookPresentation: string
     case PolaroidMemories = 'polaroid-memories';
     case PolaroidBoard = 'polaroid-board';
     case PortraitAlbum = 'portrait-album';
+    case InstantPhoto = 'instant-photo';
     case Scrapbook = 'scrapbook';
     case TravelJournal = 'travel-journal';
     case MagazineStyle = 'magazine-style';
@@ -34,6 +35,7 @@ enum BookPresentation: string
             self::PolaroidMemories => 'Polaroid Memories',
             self::PolaroidBoard => 'Quadro Polaroid',
             self::PortraitAlbum => 'Álbum Retrato',
+            self::InstantPhoto => 'Instant Photo',
             self::Scrapbook => 'Scrapbook',
             self::TravelJournal => 'Travel Journal',
             self::MagazineStyle => 'Magazine Style',
