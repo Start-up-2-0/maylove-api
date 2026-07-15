@@ -48,6 +48,27 @@ final class AlbumMediaRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return list<AlbumMedia>
+     */
+    public function findActivePhotosByAlbum(Album $album, ?int $limit = null): array
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->andWhere('m.album = :album')
+            ->andWhere('m.mediaType = :type')
+            ->andWhere('m.deletedAt IS NULL')
+            ->setParameter('album', $album)
+            ->setParameter('type', AlbumMediaType::Photo)
+            ->orderBy('m.sortOrder', 'ASC')
+            ->addOrderBy('m.createdAt', 'ASC');
+
+        if ($limit !== null && $limit > 0) {
+            $qb->setMaxResults($limit);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
     public function countActiveByAlbumAndType(Album $album, AlbumMediaType $type): int
     {
         return (int) $this->createQueryBuilder('m')

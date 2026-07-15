@@ -9,6 +9,7 @@ use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\AlbumMedia;
 use App\Infrastructure\Persistence\Repository\AlbumMediaRepository;
 use App\Infrastructure\Storage\StorageApiClient;
+use Symfony\Component\Uid\Uuid;
 
 final class AlbumSerializer
 {
@@ -25,6 +26,8 @@ final class AlbumSerializer
      */
     public function serializeSummary(Album $album): array
     {
+        $gallery = $this->resolveGalleryPreview($album);
+
         return [
             'id' => (string) $album->getId(),
             'slug' => $album->getSlug(),
@@ -37,6 +40,8 @@ final class AlbumSerializer
             'is_public' => $album->isPublic(),
             'photo_count' => $this->mediaRepository->countActiveByAlbumAndType($album, AlbumMediaType::Photo),
             'views_count' => $album->getViewsCount(),
+            'cover_url' => $gallery['cover_url'],
+            'preview_thumbs' => $gallery['preview_thumbs'],
             'published_at' => $album->getPublishedAt()?->format(\DateTimeInterface::ATOM),
             'created_at' => $album->getCreatedAt()->format(\DateTimeInterface::ATOM),
             'updated_at' => $album->getUpdatedAt()->format(\DateTimeInterface::ATOM),
@@ -87,18 +92,74 @@ final class AlbumSerializer
         ];
 
         if ($includeUrl) {
-            try {
-                $urlData = $this->storageApiClient->getFileUrl(
-                    $media->getStorageFileId(),
-                    'protected',
-                    self::MEDIA_URL_TTL,
-                );
-                $payload['url'] = isset($urlData['url']) ? (string) $urlData['url'] : null;
-            } catch (\Throwable) {
-                $payload['url'] = null;
-            }
+            $payload['url'] = $this->resolveMediaUrl($media);
         }
 
         return $payload;
+    }
+
+    /**
+     * @return array{cover_url: ?string, preview_thumbs: list<string>}
+     */
+    private function resolveGalleryPreview(Album $album): array
+    {
+        $photos = $this->mediaRepository->findActivePhotosByAlbum($album, 8);
+        if ($photos === []) {
+            return ['cover_url' => null, 'preview_thumbs' => []];
+        }
+
+        $coverId = null;
+        $config = $album->getBookConfig();
+        if (is_array($config) && isset($config['cover']) && is_array($config['cover'])) {
+            $raw = $config['cover']['media_id'] ?? null;
+            if (is_string($raw) && $raw !== '' && Uuid::isValid($raw)) {
+                $coverId = $raw;
+            }
+        }
+
+        $coverMedia = null;
+        foreach ($photos as $photo) {
+            if ($coverId !== null && (string) $photo->getId() === $coverId) {
+                $coverMedia = $photo;
+                break;
+            }
+        }
+        $coverMedia ??= $photos[0];
+
+        $coverUrl = $this->resolveMediaUrl($coverMedia) ?? $coverMedia->getUrlThumbnail();
+        $thumbs = [];
+        foreach ($photos as $photo) {
+            if ((string) $photo->getId() === (string) $coverMedia->getId()) {
+                continue;
+            }
+            $url = $photo->getUrlThumbnail() ?? $this->resolveMediaUrl($photo);
+            if ($url === null || $url === '') {
+                continue;
+            }
+            $thumbs[] = $url;
+            if (count($thumbs) >= 3) {
+                break;
+            }
+        }
+
+        return [
+            'cover_url' => $coverUrl,
+            'preview_thumbs' => $thumbs,
+        ];
+    }
+
+    private function resolveMediaUrl(AlbumMedia $media): ?string
+    {
+        try {
+            $urlData = $this->storageApiClient->getFileUrl(
+                $media->getStorageFileId(),
+                'protected',
+                self::MEDIA_URL_TTL,
+            );
+
+            return isset($urlData['url']) ? (string) $urlData['url'] : null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }
