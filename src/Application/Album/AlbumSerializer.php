@@ -81,6 +81,7 @@ final class AlbumSerializer
             'title' => $media->getTitle(),
             'caption' => $media->getCaption(),
             'memory_date' => $media->getMemoryDate(),
+            'place_name' => $media->getPlaceName(),
             'url_thumbnail' => $media->getUrlThumbnail(),
             'created_at' => $media->getCreatedAt()->format(\DateTimeInterface::ATOM),
         ];

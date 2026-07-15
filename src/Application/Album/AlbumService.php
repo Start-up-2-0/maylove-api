@@ -214,6 +214,9 @@ final class AlbumService
             if (array_key_exists('memory_date', $page)) {
                 $media->setMemoryDate(is_string($page['memory_date']) ? $page['memory_date'] : null);
             }
+            if (array_key_exists('place_name', $page)) {
+                $media->setPlaceName(is_string($page['place_name']) ? $page['place_name'] : null);
+            }
             $this->mediaRepository->save($media);
         }
     }

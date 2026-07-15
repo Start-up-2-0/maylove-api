@@ -49,6 +49,9 @@ class AlbumMedia
     #[ORM\Column(name: 'memory_date', length: 50, nullable: true)]
     private ?string $memoryDate = null;
 
+    #[ORM\Column(name: 'place_name', length: 160, nullable: true)]
+    private ?string $placeName = null;
+
     #[ORM\Column(name: 'url_thumbnail', length: 500, nullable: true)]
     private ?string $urlThumbnail = null;
 
@@ -157,6 +160,19 @@ class AlbumMedia
     public function setMemoryDate(?string $memoryDate): void
     {
         $this->memoryDate = $memoryDate !== null ? trim($memoryDate) : null;
+    }
+
+    public function getPlaceName(): ?string
+    {
+        return $this->placeName;
+    }
+
+    public function setPlaceName(?string $placeName): void
+    {
+        $this->placeName = $placeName !== null ? trim($placeName) : null;
+        if ($this->placeName === '') {
+            $this->placeName = null;
+        }
     }
 
     public function getUrlThumbnail(): ?string

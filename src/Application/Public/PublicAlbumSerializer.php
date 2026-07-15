@@ -105,6 +105,7 @@ final class PublicAlbumSerializer
             'title' => $media->getTitle(),
             'caption' => $media->getCaption(),
             'memory_date' => $media->getMemoryDate(),
+            'place_name' => $media->getPlaceName(),
             'sort_order' => $media->getSortOrder(),
         ];
     }
