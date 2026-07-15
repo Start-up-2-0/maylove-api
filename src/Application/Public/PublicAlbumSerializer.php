@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Application\Public;
 
+use App\Application\Album\AlbumMusicConfig;
 use App\Domain\Album\AlbumMediaType;
 use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\AlbumMedia;
 use App\Infrastructure\Persistence\Repository\AlbumMediaRepository;
-use App\Infrastructure\Persistence\Repository\AlbumRepository;
 use App\Infrastructure\Storage\StorageApiClient;
 
 final class PublicAlbumSerializer
@@ -31,10 +31,10 @@ final class PublicAlbumSerializer
             $media,
             fn (AlbumMedia $item) => $item->getMediaType() === AlbumMediaType::Photo,
         ));
-        $audio = null;
+        $audioMedia = null;
         foreach ($media as $item) {
             if ($item->getMediaType() === AlbumMediaType::Audio) {
-                $audio = $this->serializeMedia($item);
+                $audioMedia = $item;
                 break;
             }
         }
@@ -53,7 +53,33 @@ final class PublicAlbumSerializer
             'published_at' => $album->getPublishedAt()?->format(\DateTimeInterface::ATOM),
             'views_count' => $album->getViewsCount(),
             'photos' => array_map(fn (AlbumMedia $item) => $this->serializeMedia($item), $photos),
-            'music' => $audio,
+            'music' => $this->serializeMusic($album, $audioMedia),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function serializeMusic(Album $album, ?AlbumMedia $audioMedia): ?array
+    {
+        $musicCfg = AlbumMusicConfig::get($album);
+        if (($musicCfg['source'] ?? 'none') === 'none' && $audioMedia === null) {
+            return null;
+        }
+
+        if ($audioMedia === null) {
+            return null;
+        }
+
+        $base = $this->serializeMedia($audioMedia);
+
+        return [
+            ...$base,
+            'autoplay' => (bool) ($musicCfg['autoplay'] ?? true),
+            'loop' => (bool) ($musicCfg['loop'] ?? true),
+            'duration_seconds' => isset($musicCfg['duration_seconds']) ? (float) $musicCfg['duration_seconds'] : null,
+            'start_seconds' => isset($musicCfg['start_seconds']) ? (float) $musicCfg['start_seconds'] : 0.0,
+            'end_seconds' => isset($musicCfg['end_seconds']) ? (float) $musicCfg['end_seconds'] : null,
         ];
     }
 

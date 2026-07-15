@@ -12,3 +12,4 @@ framework:
             App\Infrastructure\Messenger\Message\ProcessMercadoPagoWebhookMessage: sync
             App\Infrastructure\Messenger\Message\ProcessMusicExtractMessage: sync
             App\Infrastructure\Messenger\Message\ImportMusicFromYoutubeMessage: sync
+            App\Infrastructure\Messenger\Message\ImportAlbumMusicFromYoutubeMessage: sync

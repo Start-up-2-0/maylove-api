@@ -123,6 +123,7 @@ final class AlbumService
         if (array_key_exists('book_config', $payload)) {
             if ($payload['book_config'] === null) {
                 $album->setBookConfig(null);
+                $this->clearMusicMedia($album);
             } elseif (is_array($payload['book_config'])) {
                 /** @var array<string, mixed> $config */
                 $config = $payload['book_config'];
@@ -132,6 +133,10 @@ final class AlbumService
                     if (is_string($accent) && $accent !== '') {
                         $album->setColorPrimary($accent);
                     }
+                }
+                $music = $config['music'] ?? null;
+                if (is_array($music) && (($music['source'] ?? '') === 'none')) {
+                    $this->clearMusicMedia($album);
                 }
             } else {
                 throw new AlbumException('book_config inválido.', 'INVALID_BOOK_CONFIG', 422);
@@ -168,6 +173,19 @@ final class AlbumService
     {
         $album->softDelete();
         $this->albumRepository->save($album);
+    }
+
+    private function clearMusicMedia(Album $album): void
+    {
+        foreach ($this->mediaRepository->findActiveByAlbum($album) as $media) {
+            if ($media->getMediaType() === AlbumMediaType::Audio) {
+                $media->softDelete();
+                $this->mediaRepository->save($media);
+            }
+        }
+        if ($album->getMusicMediaId() !== null) {
+            $album->setMusicMediaId(null);
+        }
     }
 
     /**

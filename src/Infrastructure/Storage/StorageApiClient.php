@@ -174,16 +174,20 @@ final class StorageApiClient
     /**
      * @return array<string, mixed>
      */
-    public function importYoutubeAudio(string $tributeId, string $url, string $userId): array
-    {
+    public function importYoutubeAudio(
+        string $contextId,
+        string $url,
+        string $userId,
+        string $context = 'tribute',
+    ): array {
         $response = $this->httpClient->request(
             'POST',
             $this->baseUrl().'/internal/youtube-audio',
             [
                 'headers' => $this->serviceHeaders(),
                 'json' => [
-                    'context' => 'tribute',
-                    'context_id' => $tributeId,
+                    'context' => $context,
+                    'context_id' => $contextId,
                     'url' => $url,
                     'user_id' => $userId,
                 ],
