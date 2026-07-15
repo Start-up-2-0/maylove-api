@@ -59,6 +59,6 @@ final class TributeCheckoutService
         $tribute->markAwaitingPayment();
         $this->tributeRepository->save($tribute);
 
-        return $this->orderCheckoutService->checkout($tribute, $user);
+        return $this->orderCheckoutService->checkoutTribute($tribute, $user);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Entity\Billing;
 
 use App\Domain\Billing\OrderStatus;
+use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\Tribute;
 use App\Infrastructure\Persistence\Entity\User;
 use Doctrine\DBAL\Types\Types;
@@ -14,6 +15,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity]
 #[ORM\Table(name: 'orders')]
 #[ORM\UniqueConstraint(name: 'uniq_orders_tribute', columns: ['tribute_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_orders_album', columns: ['album_id'])]
 #[ORM\HasLifecycleCallbacks]
 class Order
 {
@@ -26,8 +28,12 @@ class Order
     private User $user;
 
     #[ORM\ManyToOne(targetEntity: Tribute::class)]
-    #[ORM\JoinColumn(name: 'tribute_id', referencedColumnName: 'id', nullable: false)]
-    private Tribute $tribute;
+    #[ORM\JoinColumn(name: 'tribute_id', referencedColumnName: 'id', nullable: true)]
+    private ?Tribute $tribute = null;
+
+    #[ORM\ManyToOne(targetEntity: Album::class)]
+    #[ORM\JoinColumn(name: 'album_id', referencedColumnName: 'id', nullable: true)]
+    private ?Album $album = null;
 
     #[ORM\ManyToOne(targetEntity: ProductPrice::class)]
     #[ORM\JoinColumn(name: 'product_price_id', referencedColumnName: 'id', nullable: false)]
@@ -42,8 +48,20 @@ class Order
     #[ORM\Column(name: 'mp_preference_id', length: 120, nullable: true)]
     private ?string $mpPreferenceId = null;
 
+    #[ORM\Column(name: 'mp_payment_id', length: 120, nullable: true)]
+    private ?string $mpPaymentId = null;
+
     #[ORM\Column(name: 'checkout_url', length: 500, nullable: true)]
     private ?string $checkoutUrl = null;
+
+    #[ORM\Column(name: 'pix_qr_code', type: Types::TEXT, nullable: true)]
+    private ?string $pixQrCode = null;
+
+    #[ORM\Column(name: 'pix_qr_code_base64', type: Types::TEXT, nullable: true)]
+    private ?string $pixQrCodeBase64 = null;
+
+    #[ORM\Column(name: 'pix_ticket_url', length: 500, nullable: true)]
+    private ?string $pixTicketUrl = null;
 
     #[ORM\Column(name: 'external_reference', length: 120)]
     private string $externalReference;
@@ -59,19 +77,43 @@ class Order
 
     public function __construct(
         User $user,
-        Tribute $tribute,
         ProductPrice $productPrice,
         int $amountCents,
         string $externalReference,
+        ?Tribute $tribute = null,
+        ?Album $album = null,
     ) {
+        if (($tribute === null) === ($album === null)) {
+            throw new \InvalidArgumentException('Order must reference exactly one of tribute or album.');
+        }
+
         $this->id = Uuid::v7();
         $this->user = $user;
         $this->tribute = $tribute;
+        $this->album = $album;
         $this->productPrice = $productPrice;
         $this->amountCents = $amountCents;
         $this->externalReference = $externalReference !== '' ? $externalReference : 'order:'.(string) $this->id;
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public static function forTribute(
+        User $user,
+        Tribute $tribute,
+        ProductPrice $productPrice,
+        int $amountCents,
+    ): self {
+        return new self($user, $productPrice, $amountCents, '', $tribute, null);
+    }
+
+    public static function forAlbum(
+        User $user,
+        Album $album,
+        ProductPrice $productPrice,
+        int $amountCents,
+    ): self {
+        return new self($user, $productPrice, $amountCents, '', null, $album);
     }
 
     public function getId(): Uuid
@@ -84,9 +126,14 @@ class Order
         return $this->user;
     }
 
-    public function getTribute(): Tribute
+    public function getTribute(): ?Tribute
     {
         return $this->tribute;
+    }
+
+    public function getAlbum(): ?Album
+    {
+        return $this->album;
     }
 
     public function getProductPrice(): ProductPrice
@@ -109,9 +156,29 @@ class Order
         return $this->mpPreferenceId;
     }
 
+    public function getMpPaymentId(): ?string
+    {
+        return $this->mpPaymentId;
+    }
+
     public function getCheckoutUrl(): ?string
     {
         return $this->checkoutUrl;
+    }
+
+    public function getPixQrCode(): ?string
+    {
+        return $this->pixQrCode;
+    }
+
+    public function getPixQrCodeBase64(): ?string
+    {
+        return $this->pixQrCodeBase64;
+    }
+
+    public function getPixTicketUrl(): ?string
+    {
+        return $this->pixTicketUrl;
     }
 
     public function getExternalReference(): string
@@ -123,6 +190,36 @@ class Order
     {
         $this->mpPreferenceId = $preferenceId;
         $this->checkoutUrl = $checkoutUrl;
+        $this->touch();
+    }
+
+    public function setPixPayment(
+        string $mpPaymentId,
+        ?string $qrCode,
+        ?string $qrCodeBase64,
+        ?string $ticketUrl,
+    ): void {
+        $this->mpPaymentId = $mpPaymentId;
+        $this->pixQrCode = $qrCode;
+        $this->pixQrCodeBase64 = $qrCodeBase64;
+        $this->pixTicketUrl = $ticketUrl;
+        if ($ticketUrl !== null && $ticketUrl !== '') {
+            $this->checkoutUrl = $ticketUrl;
+        }
+        $this->touch();
+    }
+
+    public function hasActivePix(): bool
+    {
+        return $this->status === OrderStatus::Pending
+            && $this->pixQrCode !== null
+            && $this->pixQrCode !== '';
+    }
+
+    public function markPending(): void
+    {
+        $this->status = OrderStatus::Pending;
+        $this->paidAt = null;
         $this->touch();
     }
 

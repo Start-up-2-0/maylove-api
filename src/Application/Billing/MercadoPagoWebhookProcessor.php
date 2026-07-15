@@ -26,6 +26,7 @@ final class MercadoPagoWebhookProcessor
         private readonly UserSubscriptionRepository $subscriptionRepository,
         private readonly PaymentRepository $paymentRepository,
         private readonly TributePublicationService $tributePublicationService,
+        private readonly AlbumPublicationService $albumPublicationService,
         private readonly SubscriptionCapabilityService $subscriptionCapability,
     ) {
     }
@@ -122,10 +123,20 @@ final class MercadoPagoWebhookProcessor
         $order->markPaid();
         $this->orderRepository->save($order);
 
-        $this->tributePublicationService->publishFromPayment(
-            $order->getTribute(),
-            BillingModeUsed::PerTribute,
-        );
+        $tribute = $order->getTribute();
+        if ($tribute !== null) {
+            $this->tributePublicationService->publishFromPayment(
+                $tribute,
+                BillingModeUsed::PerTribute,
+            );
+
+            return;
+        }
+
+        $album = $order->getAlbum();
+        if ($album !== null) {
+            $this->albumPublicationService->publishFromPayment($album);
+        }
     }
 
     /**

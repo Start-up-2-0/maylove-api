@@ -14,6 +14,7 @@ final class AlbumPublishService
     public function __construct(
         private readonly AlbumValidationService $validationService,
         private readonly AlbumRepository $albumRepository,
+        private readonly bool $billingEnabled,
     ) {
     }
 
@@ -30,6 +31,14 @@ final class AlbumPublishService
         $validation = $this->validationService->validate($album);
         if (!$validation['valid']) {
             throw new AlbumException('Álbum incompleto para publicação.', 'VALIDATION_FAILED', 422);
+        }
+
+        if ($this->billingEnabled) {
+            throw new AlbumException(
+                'Pagamento necessário. Use o checkout PIX para publicar o álbum.',
+                'PAYMENT_REQUIRED',
+                402,
+            );
         }
 
         $album->markPublished();

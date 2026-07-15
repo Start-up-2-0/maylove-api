@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\UI\Http\Controller\Album;
 
+use App\Application\Album\AlbumCheckoutService;
 use App\Application\Album\AlbumPublishService;
 use App\Application\Album\AlbumSerializer;
 use App\Application\Album\AlbumService;
@@ -27,6 +28,7 @@ final class AlbumController extends AbstractController
         private readonly AlbumService $albumService,
         private readonly AlbumValidationService $validationService,
         private readonly AlbumPublishService $publishService,
+        private readonly AlbumCheckoutService $checkoutService,
         private readonly AlbumSerializer $serializer,
         private readonly MediaUploadPolicy $uploadPolicy,
         private readonly BookPresentationCatalogService $bookPresentationCatalog,
@@ -152,6 +154,23 @@ final class AlbumController extends AbstractController
             $album = $this->albumService->getOwned($id, $user->getUser());
 
             return ApiResponse::success('OK', $this->validationService->validate($album));
+        } catch (AlbumException $exception) {
+            return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
+        }
+    }
+
+    #[Route('/{id}/checkout', name: 'checkout', methods: ['POST'])]
+    public function checkout(string $id, #[CurrentUser] ?MayLoveUser $user): JsonResponse
+    {
+        if ($user === null) {
+            return ApiResponse::error('Não autorizado.', 'UNAUTHORIZED', Response::HTTP_UNAUTHORIZED);
+        }
+
+        try {
+            $album = $this->albumService->getOwned($id, $user->getUser());
+            $checkout = $this->checkoutService->checkout($album, $user->getUser());
+
+            return ApiResponse::success('Checkout PIX iniciado.', $checkout, Response::HTTP_ACCEPTED);
         } catch (AlbumException $exception) {
             return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
         }

@@ -277,6 +277,18 @@ class Album
         $this->touch();
     }
 
+    public function markAwaitingPayment(): void
+    {
+        $this->status = AlbumStatus::AwaitingPayment;
+        $this->touch();
+    }
+
+    public function markDraft(): void
+    {
+        $this->status = AlbumStatus::Draft;
+        $this->touch();
+    }
+
     public function getDeletedAt(): ?\DateTimeImmutable
     {
         return $this->deletedAt;

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Repository\Billing;
 
+use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\Billing\Order;
 use App\Infrastructure\Persistence\Entity\Tribute;
-use App\Infrastructure\Persistence\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
@@ -23,7 +23,12 @@ final class OrderRepository extends ServiceEntityRepository
 
     public function findByTribute(Tribute $tribute): ?Order
     {
-        return $this->findOneBy(['tribute' => $tribute]);
+        return $this->findOneBy(['tribute' => $tribute], ['createdAt' => 'DESC']);
+    }
+
+    public function findByAlbum(Album $album): ?Order
+    {
+        return $this->findOneBy(['album' => $album], ['createdAt' => 'DESC']);
     }
 
     public function findByExternalReference(string $externalReference): ?Order
@@ -34,8 +39,9 @@ final class OrderRepository extends ServiceEntityRepository
     public function findOwnedById(Uuid $id, Uuid $userId): ?Order
     {
         return $this->createQueryBuilder('o')
-            ->addSelect('t', 'pp')
-            ->innerJoin('o.tribute', 't')
+            ->addSelect('pp')
+            ->leftJoin('o.tribute', 't')
+            ->leftJoin('o.album', 'a')
             ->innerJoin('o.productPrice', 'pp')
             ->andWhere('o.id = :id')
             ->andWhere('o.user = :userId')

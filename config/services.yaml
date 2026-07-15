@@ -41,7 +41,6 @@ services:
 
     App\Application\Billing\OrderCheckoutService:
         arguments:
-            $frontendUrl: '%app.url%'
             $notificationUrl: '%mercadopago.notification_url%'
 
     App\UI\Http\Controller\Web\MercadoPagoWebhookController:
@@ -120,6 +119,14 @@ services:
             $billingEnabled: '%billing.enabled%'
 
     App\Application\Tribute\TributePublishService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
+
+    App\Application\Album\AlbumCheckoutService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
+
+    App\Application\Album\AlbumPublishService:
         arguments:
             $billingEnabled: '%billing.enabled%'
 
