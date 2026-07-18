@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\UI\Http\Controller\Web;
 
-use App\Domain\Billing\Exception\BillingException;
 use App\Infrastructure\Messenger\Message\ProcessMercadoPagoWebhookMessage;
 use App\Infrastructure\Payment\MercadoPagoWebhookSignatureValidator;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +19,7 @@ final class MercadoPagoWebhookController extends AbstractController
     public function __construct(
         private readonly MercadoPagoWebhookSignatureValidator $signatureValidator,
         private readonly MessageBusInterface $messageBus,
+        private readonly LoggerInterface $logger,
         private readonly bool $webhookSignatureRequired,
     ) {
     }
@@ -39,11 +40,19 @@ final class MercadoPagoWebhookController extends AbstractController
         $eventType = is_string($body['type'] ?? null) ? (string) $body['type'] : 'unknown';
         $externalEventId = $requestId ?: sprintf('%s:%s', $eventType, $this->extractResourceId($body) ?? uniqid('', true));
 
-        $this->messageBus->dispatch(new ProcessMercadoPagoWebhookMessage(
-            $externalEventId,
-            $eventType,
-            $body,
-        ));
+        try {
+            $this->messageBus->dispatch(new ProcessMercadoPagoWebhookMessage(
+                $externalEventId,
+                $eventType,
+                $body,
+            ));
+        } catch (\Throwable $e) {
+            $this->logger->error('Falha ao processar webhook Mercado Pago.', [
+                'external_event_id' => $externalEventId,
+                'event_type' => $eventType,
+                'exception' => $e->getMessage(),
+            ]);
+        }
 
         return new Response(null, Response::HTTP_OK);
     }

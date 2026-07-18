@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Application\Billing;
 
+use App\Domain\Billing\Exception\BillingException;
 use App\Domain\Billing\PaymentStatus;
 use App\Domain\Billing\ProductBillingMode;
-use App\Domain\Billing\SubscriptionStatus;
 use App\Domain\Tribute\BillingModeUsed;
 use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Payment\MercadoPagoClient;
@@ -76,7 +76,17 @@ final class MercadoPagoWebhookProcessor
             return;
         }
 
-        $paymentData = $this->mercadoPagoClient->getPayment($paymentId);
+        try {
+            $paymentData = $this->mercadoPagoClient->getPayment($paymentId);
+        } catch (BillingException) {
+            // Simulação do MP / pagamento inexistente / erro transitório do gateway:
+            // ack do evento sem quebrar o webhook (MP espera HTTP 200).
+            $event->markProcessed();
+            $this->paymentEventRepository->save($event);
+
+            return;
+        }
+
         $status = is_string($paymentData['status'] ?? null) ? (string) $paymentData['status'] : '';
         $externalReference = is_string($paymentData['external_reference'] ?? null)
             ? (string) $paymentData['external_reference']
@@ -192,7 +202,15 @@ final class MercadoPagoWebhookProcessor
             return;
         }
 
-        $preapproval = $this->mercadoPagoClient->getPreapproval($resourceId);
+        try {
+            $preapproval = $this->mercadoPagoClient->getPreapproval($resourceId);
+        } catch (BillingException) {
+            $event->markProcessed();
+            $this->paymentEventRepository->save($event);
+
+            return;
+        }
+
         $status = is_string($preapproval['status'] ?? null) ? (string) $preapproval['status'] : '';
         $externalReference = is_string($preapproval['external_reference'] ?? null)
             ? (string) $preapproval['external_reference']
