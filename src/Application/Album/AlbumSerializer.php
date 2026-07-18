@@ -14,6 +14,7 @@ use Symfony\Component\Uid\Uuid;
 final class AlbumSerializer
 {
     private const MEDIA_URL_TTL = 3600;
+    private const MEDIA_URL_TTL_MARGIN_SECONDS = 60;
 
     public function __construct(
         private readonly AlbumMediaRepository $mediaRepository,
@@ -61,6 +62,9 @@ final class AlbumSerializer
             : null;
         $data['book_config'] = $album->getBookConfig();
         $data['book_pages'] = $album->getBookPages();
+        $data['media_urls_expire_at'] = (new \DateTimeImmutable())
+            ->modify(sprintf('+%d seconds', self::MEDIA_URL_TTL - self::MEDIA_URL_TTL_MARGIN_SECONDS))
+            ->format(\DateTimeInterface::ATOM);
         $media = $this->mediaRepository->findActiveByAlbum($album);
         $data['media'] = array_map(
             fn (AlbumMedia $item) => $this->serializeMedia($item, includeUrl: true),

@@ -76,15 +76,25 @@ final class AlbumService
 
     /**
      * @param array<string, mixed> $payload
+     * @return array{album: Album, music_cleared: bool}
      */
-    public function update(Album $album, array $payload): Album
+    public function update(Album $album, array $payload): array
     {
         if (!$album->isEditable()) {
             throw new AlbumException('Álbum não pode ser editado.', 'ALBUM_NOT_EDITABLE', 403);
         }
 
+        $musicCleared = false;
+
         if (array_key_exists('title', $payload)) {
-            $album->setTitle(is_string($payload['title']) ? $payload['title'] : null);
+            $title = is_string($payload['title']) ? trim($payload['title']) : null;
+            if ($title === null || $title === '') {
+                throw new AlbumException('Título do álbum não pode ser vazio.', 'TITLE_REQUIRED', 422);
+            }
+            if (mb_strlen($title) < 2) {
+                throw new AlbumException('O título deve ter pelo menos 2 caracteres.', 'TITLE_TOO_SHORT', 422);
+            }
+            $album->setTitle($title);
         }
         if (array_key_exists('subtitle', $payload)) {
             $album->setSubtitle(is_string($payload['subtitle']) ? $payload['subtitle'] : null);
@@ -123,7 +133,7 @@ final class AlbumService
         if (array_key_exists('book_config', $payload)) {
             if ($payload['book_config'] === null) {
                 $album->setBookConfig(null);
-                $this->clearMusicMedia($album);
+                $musicCleared = $this->clearMusicMedia($album);
             } elseif (is_array($payload['book_config'])) {
                 /** @var array<string, mixed> $config */
                 $config = $payload['book_config'];
@@ -136,7 +146,7 @@ final class AlbumService
                 }
                 $music = $config['music'] ?? null;
                 if (is_array($music) && (($music['source'] ?? '') === 'none')) {
-                    $this->clearMusicMedia($album);
+                    $musicCleared = $this->clearMusicMedia($album);
                 }
             } else {
                 throw new AlbumException('book_config inválido.', 'INVALID_BOOK_CONFIG', 422);
@@ -166,7 +176,7 @@ final class AlbumService
 
         $this->albumRepository->save($album);
 
-        return $album;
+        return ['album' => $album, 'music_cleared' => $musicCleared];
     }
 
     public function delete(Album $album): void
@@ -175,17 +185,25 @@ final class AlbumService
         $this->albumRepository->save($album);
     }
 
-    private function clearMusicMedia(Album $album): void
+    /**
+     * Returns true if at least one audio track was removed.
+     */
+    private function clearMusicMedia(Album $album): bool
     {
+        $cleared = false;
         foreach ($this->mediaRepository->findActiveByAlbum($album) as $media) {
             if ($media->getMediaType() === AlbumMediaType::Audio) {
                 $media->softDelete();
                 $this->mediaRepository->save($media);
+                $cleared = true;
             }
         }
         if ($album->getMusicMediaId() !== null) {
             $album->setMusicMediaId(null);
+            $cleared = true;
         }
+
+        return $cleared;
     }
 
     /**

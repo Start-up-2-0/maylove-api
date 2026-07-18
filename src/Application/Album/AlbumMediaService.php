@@ -162,6 +162,13 @@ final class AlbumMediaService
     }
 
     /**
+     * Reorders photos in the album.
+     *
+     * Accepts either a full list or a partial list of photo IDs.
+     * - Full list: all photos are reassigned sort_order 0..N in the given sequence.
+     * - Partial list: the supplied photos are placed first (in the given sequence),
+     *   followed by the remaining photos in their original relative order.
+     *
      * @param list<string> $order
      */
     public function reorder(Album $album, array $order): void
@@ -173,6 +180,8 @@ final class AlbumMediaService
         }
 
         $activeMedia = $this->mediaRepository->findActiveByAlbum($album);
+
+        /** @var array<string, AlbumMedia> $byId */
         $byId = [];
         foreach ($activeMedia as $media) {
             if ($media->getMediaType() === AlbumMediaType::Photo) {
@@ -180,15 +189,29 @@ final class AlbumMediaService
             }
         }
 
-        if (count($order) !== count($byId)) {
-            throw new AlbumException('Lista de ordenação incompleta.', 'VALIDATION_ERROR', 400);
-        }
-
-        $sortOrder = 0;
+        // Validate every supplied ID belongs to this album
         foreach ($order as $mediaId) {
             if (!isset($byId[$mediaId])) {
                 throw new AlbumException('Mídia inválida na ordenação.', 'VALIDATION_ERROR', 400);
             }
+        }
+
+        $isPartial = count($order) !== count($byId);
+
+        if ($isPartial) {
+            // Build the final sequence: supplied IDs first, then the rest in their current relative order
+            $suppliedSet = array_flip($order);
+            $remainder = array_values(array_filter(
+                array_keys($byId),
+                static fn (string $id) => !isset($suppliedSet[$id]),
+            ));
+            $finalOrder = [...$order, ...$remainder];
+        } else {
+            $finalOrder = $order;
+        }
+
+        $sortOrder = 0;
+        foreach ($finalOrder as $mediaId) {
             $byId[$mediaId]->setSortOrder($sortOrder++);
         }
 

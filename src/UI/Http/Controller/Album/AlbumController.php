@@ -118,9 +118,13 @@ final class AlbumController extends AbstractController
 
         try {
             $album = $this->albumService->getOwned($id, $user->getUser());
-            $album = $this->albumService->update($album, $payload);
+            $result = $this->albumService->update($album, $payload);
+            $data = $this->serializer->serializeDetail($result['album']);
+            if ($result['music_cleared']) {
+                $data['music_cleared'] = true;
+            }
 
-            return ApiResponse::success('Álbum atualizado.', $this->serializer->serializeDetail($album));
+            return ApiResponse::success('Álbum atualizado.', $data);
         } catch (AlbumException $exception) {
             return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
         }
