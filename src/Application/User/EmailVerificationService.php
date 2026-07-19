@@ -44,7 +44,7 @@ final class EmailVerificationService
         $verificationToken = new EmailVerificationToken($user, $tokenHash, $expiresAt);
         $this->tokenRepository->save($verificationToken);
 
-        $verificationUrl = rtrim($this->frontendUrl, '/').'/verify-email?token='.rawurlencode($plainToken);
+        $verificationUrl = rtrim($this->frontendUrl, '/').'/verify-email';
 
         $this->messageBus->dispatch(new SendVerificationEmailMessage(
             messageId: Uuid::v7()->toRfc4122(),

@@ -40,7 +40,7 @@ final class ImportMusicFromUrlService
             throw new TributeException('URL inválida.', 'VALIDATION_ERROR', 400);
         }
 
-        if (!preg_match('#(youtube\.com|youtu\.be)#i', $url)) {
+        if (!preg_match('#^https?://(www\.)?(youtube\.com|youtu\.be)/#i', $url)) {
             throw new TributeException('Informe um link válido do YouTube.', 'VALIDATION_ERROR', 400);
         }
 

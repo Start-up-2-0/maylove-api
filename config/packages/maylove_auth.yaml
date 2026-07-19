@@ -6,8 +6,8 @@ parameters:
     auth.sliding_renewal_minutes: '%env(int:AUTH_SLIDING_RENEWAL_MINUTES)%'
     auth.max_login_attempts: '%env(int:AUTH_MAX_LOGIN_ATTEMPTS)%'
     auth.lockout_minutes: '%env(int:AUTH_LOCKOUT_MINUTES)%'
-    auth.validate_ip_on_token: false
-    auth.validate_user_agent_on_token: false
+    auth.validate_ip_on_token: true
+    auth.validate_user_agent_on_token: true
     auth_cookie_secure_default: '0'
     auth.cookie_secure: '%env(bool:default:auth_cookie_secure_default:AUTH_COOKIE_SECURE)%'
     auth_email_verification_enabled_default: '1'

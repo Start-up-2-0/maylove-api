@@ -59,9 +59,9 @@ final class TributeController extends AbstractController
             );
         } catch (TributeException $exception) {
             return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
-        } catch (\Throwable $exception) {
+        } catch (\Throwable) {
             return ApiResponse::error(
-                'Falha ao criar homenagem: '.$exception->getMessage(),
+                'Falha ao criar homenagem.',
                 'TRIBUTE_CREATE_FAILED',
                 Response::HTTP_INTERNAL_SERVER_ERROR,
             );

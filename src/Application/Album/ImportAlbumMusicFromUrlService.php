@@ -41,7 +41,7 @@ final class ImportAlbumMusicFromUrlService
             throw new AlbumException('URL inválida.', 'VALIDATION_ERROR', 400);
         }
 
-        if (!preg_match('#(youtube\.com|youtu\.be)#i', $url)) {
+        if (!preg_match('#^https?://(www\.)?(youtube\.com|youtu\.be)/#i', $url)) {
             throw new AlbumException('Informe um link válido do YouTube.', 'VALIDATION_ERROR', 400);
         }
 

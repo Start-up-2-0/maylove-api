@@ -41,7 +41,6 @@ final class PublicTributeHtmlRenderer
 </head>
 <body>
     <div id="app" data-slug="{$slug}">Carregando homenagem...</div>
-    <script type="module" src="{$frontend}/@vite/client"></script>
     <script type="module" src="{$frontend}/src/main.ts"></script>
 </body>
 </html>

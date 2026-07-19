@@ -13,6 +13,7 @@ final class AlbumViewService
     public function __construct(
         private readonly AlbumRepository $albumRepository,
         private readonly PublicAlbumQueryService $queryService,
+        private readonly ViewRateLimitService $rateLimitService,
     ) {
     }
 
@@ -21,6 +22,10 @@ final class AlbumViewService
         $sessionId = trim($sessionId);
         if ($sessionId === '' || !Uuid::isValid($sessionId)) {
             throw new AlbumException('session_id inválido.', 'VALIDATION_ERROR', 400);
+        }
+
+        if (!$this->rateLimitService->canRecordView($slug, $sessionId)) {
+            return;
         }
 
         $album = $this->queryService->getPublishedBySlug($slug);

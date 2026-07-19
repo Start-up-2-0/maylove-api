@@ -14,6 +14,7 @@ final class TributeViewService
     public function __construct(
         private readonly PublicTributeQueryService $queryService,
         private readonly TributeViewDebounceService $debounceService,
+        private readonly ViewRateLimitService $rateLimitService,
         private readonly MessageBusInterface $messageBus,
     ) {
     }
@@ -23,6 +24,10 @@ final class TributeViewService
         $sessionId = trim($sessionId);
         if ($sessionId === '' || !Uuid::isValid($sessionId)) {
             throw new TributeException('session_id inválido.', 'VALIDATION_ERROR', 400);
+        }
+
+        if (!$this->rateLimitService->canRecordView($slug, $sessionId)) {
+            return;
         }
 
         $tribute = $this->queryService->getPublishedBySlug($slug);
