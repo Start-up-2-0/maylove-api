@@ -5,6 +5,13 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    # Proxy reverso (Railway, load balancer): necessário para resolver o IP real
+    # do cliente via X-Forwarded-For. Sem isso, rate limiting por IP usa o IP
+    # do proxy e bloqueia todos os usuários juntos.
+    # Em desenvolvimento sem proxy: deixar como '127.0.0.1'.
+    trusted_proxies: '%env(default:127.0.0.1:TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port']
+
     #esi: true
     #fragments: true
 

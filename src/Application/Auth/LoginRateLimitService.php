@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Application\Auth;
 
-use App\Infrastructure\RateLimit\InMemoryRateLimiter;
+use App\Infrastructure\RateLimit\DbRateLimiter;
 
 final class LoginRateLimitService
 {
-    private const MAX_ATTEMPTS = 20;
+    private const MAX_ATTEMPTS = 10;
     private const WINDOW_SECONDS = 900;
 
     public function __construct(
-        private readonly InMemoryRateLimiter $rateLimiter,
+        private readonly DbRateLimiter $rateLimiter,
     ) {
     }
 

@@ -137,6 +137,11 @@ final class AlbumService
             } elseif (is_array($payload['book_config'])) {
                 /** @var array<string, mixed> $config */
                 $config = $payload['book_config'];
+                $this->assertMaxDepth($config, 5);
+                $encoded = json_encode($config);
+                if ($encoded === false || strlen($encoded) > 65_536) {
+                    throw new AlbumException('book_config excede o tamanho máximo permitido.', 'PAYLOAD_TOO_LARGE', 413);
+                }
                 $album->setBookConfig($config);
                 if (isset($config['colors']) && is_array($config['colors']) && isset($config['colors']['accent'])) {
                     $accent = $config['colors']['accent'];
@@ -157,10 +162,14 @@ final class AlbumService
             if ($payload['book_pages'] === null) {
                 $album->setBookPages(null);
             } elseif (is_array($payload['book_pages'])) {
+                if (count($payload['book_pages']) > 60) {
+                    throw new AlbumException('book_pages excede o limite de 60 entradas.', 'PAYLOAD_TOO_LARGE', 413);
+                }
                 /** @var list<array<string, mixed>> $bookPages */
                 $bookPages = [];
                 foreach ($payload['book_pages'] as $page) {
                     if (is_array($page)) {
+                        $this->assertMaxDepth($page, 3);
                         $bookPages[] = $page;
                     }
                 }
@@ -236,6 +245,22 @@ final class AlbumService
                 $media->setPlaceName(is_string($page['place_name']) ? $page['place_name'] : null);
             }
             $this->mediaRepository->save($media);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function assertMaxDepth(array $data, int $maxDepth, int $currentDepth = 0): void
+    {
+        if ($currentDepth >= $maxDepth) {
+            throw new AlbumException('Estrutura JSON excede profundidade máxima permitida.', 'PAYLOAD_TOO_NESTED', 422);
+        }
+
+        foreach ($data as $value) {
+            if (is_array($value)) {
+                $this->assertMaxDepth($value, $maxDepth, $currentDepth + 1);
+            }
         }
     }
 }

@@ -75,7 +75,7 @@ final class AuthService
         );
     }
 
-    public function logout(string $accessToken): void
+    public function logout(string $accessToken, ?string $refreshToken = null): void
     {
         $auth = $this->authSessionService->getActiveSessionByAccessToken(
             $accessToken,
@@ -88,6 +88,18 @@ final class AuthService
         }
 
         $this->authSessionService->revokeSession($session);
+
+        // Revogar também pelo refresh token para invalidar tokens obtidos antes do logout
+        if ($refreshToken !== null && $refreshToken !== '') {
+            try {
+                $refreshSession = $this->authSessionService->getActiveSessionByRefreshToken($refreshToken);
+                if (!$refreshSession->getId()->equals($session->getId())) {
+                    $this->authSessionService->revokeSession($refreshSession);
+                }
+            } catch (\Throwable) {
+                // Refresh token já inválido ou inexistente — sem ação
+            }
+        }
     }
 
     public function refresh(string $refreshToken, AuthSessionContext $context): IssuedTokenPair

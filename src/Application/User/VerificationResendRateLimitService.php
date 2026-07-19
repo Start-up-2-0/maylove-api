@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Application\User;
 
-use App\Infrastructure\RateLimit\InMemoryRateLimiter;
+use App\Infrastructure\RateLimit\DbRateLimiter;
 
 final class VerificationResendRateLimitService
 {
     public function __construct(
-        private readonly InMemoryRateLimiter $rateLimiter,
+        private readonly DbRateLimiter $rateLimiter,
         private readonly int $maxPerHour,
     ) {
     }

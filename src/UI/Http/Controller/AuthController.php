@@ -9,6 +9,7 @@ use App\Application\Auth\AuthSessionContext;
 use App\Application\Billing\SubscriptionCapabilityService;
 use App\Application\User\EmailVerificationService;
 use App\Application\User\RegisterUserService;
+use App\Application\User\RegistrationRateLimitService;
 use App\Application\User\EmailVerificationException;
 use App\Domain\Auth\Exception\AuthException;
 use App\Infrastructure\Persistence\Entity\User;
@@ -31,6 +32,7 @@ final class AuthController extends AbstractController
     public function __construct(
         private readonly AuthService $authService,
         private readonly RegisterUserService $registerUserService,
+        private readonly RegistrationRateLimitService $registrationRateLimitService,
         private readonly EmailVerificationService $emailVerificationService,
         private readonly SubscriptionCapabilityService $subscriptionCapability,
         private readonly ValidatorInterface $validator,
@@ -42,6 +44,15 @@ final class AuthController extends AbstractController
     #[Route('/register', name: 'register', methods: ['POST'])]
     public function register(Request $request): JsonResponse
     {
+        $ip = (string) $request->getClientIp();
+        if (!$this->registrationRateLimitService->canRegister($ip)) {
+            return ApiResponse::error(
+                'Muitas tentativas de cadastro. Tente novamente em 1 hora.',
+                'RATE_LIMIT',
+                Response::HTTP_TOO_MANY_REQUESTS,
+            );
+        }
+
         /** @var array{name?: string, email?: string, password?: string, accept_terms?: bool} $payload */
         $payload = json_decode($request->getContent(), true) ?? [];
 
@@ -52,7 +63,7 @@ final class AuthController extends AbstractController
                 'password' => [new Assert\NotBlank(), new Assert\Length(min: 8, max: 128)],
                 'accept_terms' => [new Assert\IsTrue(message: 'É necessário aceitar os termos.')],
             ],
-            'allowExtraFields' => true,
+            'allowExtraFields' => false,
         ]));
 
         if (count($violations) > 0) {
@@ -65,6 +76,7 @@ final class AuthController extends AbstractController
                 (string) $payload['email'],
                 (string) $payload['password'],
             );
+            $this->registrationRateLimitService->registerAttempt($ip);
         } catch (\InvalidArgumentException $exception) {
             return ApiResponse::error($exception->getMessage(), 'EMAIL_ALREADY_EXISTS', Response::HTTP_CONFLICT);
         } catch (UniqueConstraintViolationException) {
@@ -85,10 +97,12 @@ final class AuthController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/verify-email', name: 'verify_email', methods: ['GET'])]
+    #[Route('/verify-email', name: 'verify_email', methods: ['POST'])]
     public function verifyEmail(Request $request): JsonResponse
     {
-        $token = (string) $request->query->get('token', '');
+        /** @var array{token?: string} $payload */
+        $payload = json_decode($request->getContent(), true) ?? [];
+        $token = (string) ($payload['token'] ?? '');
 
         try {
             $user = $this->emailVerificationService->verifyByToken($token);
@@ -137,13 +151,15 @@ final class AuthController extends AbstractController
         }
 
         $response = ApiResponse::success('Login realizado com sucesso.', [
-            'token' => $result->tokens->accessToken,
             'refreshToken' => '',
             'expiresAt' => $result->tokens->accessTokenExpiresAt->format(\DateTimeInterface::ATOM),
             'refreshExpiresAt' => $result->tokens->refreshTokenExpiresAt->format(\DateTimeInterface::ATOM),
             'user' => $this->serializeUser($result->user),
             'requiresEmailConfirmation' => $result->requiresEmailConfirmation,
         ]);
+
+        // Access token via custom header (not in JSON body) to avoid XSS/extension leakage
+        $response->headers->set('x-maylove-token', $result->tokens->accessToken);
 
         AuthRefreshCookie::set(
             $response,
@@ -173,11 +189,13 @@ final class AuthController extends AbstractController
         }
 
         $response = ApiResponse::success('Token renovado com sucesso.', [
-            'token' => $tokens->accessToken,
             'refreshToken' => '',
             'expiresAt' => $tokens->accessTokenExpiresAt->format(\DateTimeInterface::ATOM),
             'refreshExpiresAt' => $tokens->refreshTokenExpiresAt->format(\DateTimeInterface::ATOM),
         ]);
+
+        // Access token via custom header (not in JSON body) to avoid XSS/extension leakage
+        $response->headers->set('x-maylove-token', $tokens->accessToken);
 
         AuthRefreshCookie::set(
             $response,
@@ -197,8 +215,12 @@ final class AuthController extends AbstractController
             return ApiResponse::error('Não autorizado.', 'UNAUTHORIZED', Response::HTTP_UNAUTHORIZED);
         }
 
+        /** @var array{refreshToken?: string} $payload */
+        $payload = json_decode($request->getContent(), true) ?? [];
+        $refreshToken = AuthRefreshCookie::resolve($request, $payload['refreshToken'] ?? null);
+
         try {
-            $this->authService->logout($token);
+            $this->authService->logout($token, $refreshToken);
         } catch (AuthException $exception) {
             return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
         }

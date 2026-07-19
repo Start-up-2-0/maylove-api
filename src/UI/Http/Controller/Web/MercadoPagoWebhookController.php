@@ -35,6 +35,16 @@ final class MercadoPagoWebhookController extends AbstractController
             return new Response('Assinatura inválida.', Response::HTTP_UNAUTHORIZED);
         }
 
+        if (!$this->webhookSignatureRequired) {
+            // Assinatura desativada (ambiente de desenvolvimento).
+            // Faz ack imediato sem processar para evitar ativações acidentais de pagamento.
+            $this->logger->warning('Webhook MP recebido mas ignorado: MERCADOPAGO_WEBHOOK_SIGNATURE_REQUIRED=false.', [
+                'request_id' => $requestId,
+            ]);
+
+            return new Response(null, Response::HTTP_OK);
+        }
+
         /** @var array<string, mixed> $body */
         $body = json_decode($payload, true) ?? [];
         $eventType = is_string($body['type'] ?? null) ? (string) $body['type'] : 'unknown';
