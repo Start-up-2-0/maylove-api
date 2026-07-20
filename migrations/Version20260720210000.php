@@ -17,7 +17,7 @@ final class Version20260720210000 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $this->addSql(<<<'SQL'
-            CREATE TABLE couple_maps (
+            CREATE TABLE IF NOT EXISTS couple_maps (
                 id CHAR(36) NOT NULL,
                 user_id CHAR(36) NOT NULL,
                 slug VARCHAR(100) NOT NULL,
@@ -45,7 +45,7 @@ final class Version20260720210000 extends AbstractMigration
             SQL);
 
         $this->addSql(<<<'SQL'
-            CREATE TABLE map_places (
+            CREATE TABLE IF NOT EXISTS map_places (
                 id CHAR(36) NOT NULL,
                 couple_map_id CHAR(36) NOT NULL,
                 place_type VARCHAR(32) NOT NULL,
@@ -73,7 +73,7 @@ final class Version20260720210000 extends AbstractMigration
             SQL);
 
         $this->addSql(<<<'SQL'
-            CREATE TABLE map_place_media (
+            CREATE TABLE IF NOT EXISTS map_place_media (
                 id CHAR(36) NOT NULL,
                 couple_map_id CHAR(36) NOT NULL,
                 place_id CHAR(36) NOT NULL,
@@ -93,29 +93,81 @@ final class Version20260720210000 extends AbstractMigration
             ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB
             SQL);
 
-        $this->addSql('ALTER TABLE orders ADD couple_map_id CHAR(36) DEFAULT NULL');
-        $this->addSql('CREATE UNIQUE INDEX uniq_orders_couple_map ON orders (couple_map_id)');
-        $this->addSql('ALTER TABLE orders ADD CONSTRAINT FK_orders_couple_map FOREIGN KEY (couple_map_id) REFERENCES couple_maps (id)');
+        if (!$this->columnExists('orders', 'couple_map_id')) {
+            $this->addSql('ALTER TABLE orders ADD couple_map_id CHAR(36) DEFAULT NULL');
+        }
+
+        if (!$this->indexExists('orders', 'uniq_orders_couple_map')) {
+            $this->addSql('CREATE UNIQUE INDEX uniq_orders_couple_map ON orders (couple_map_id)');
+        }
+
+        if (!$this->foreignKeyExists('orders', 'FK_orders_couple_map')) {
+            $this->addSql('ALTER TABLE orders ADD CONSTRAINT FK_orders_couple_map FOREIGN KEY (couple_map_id) REFERENCES couple_maps (id)');
+        }
 
         $pricePerMap = '01940000-0000-7000-8000-000000000006';
         $productId = '01940000-0000-7000-8000-000000000001';
         $this->addSql(
-            'INSERT INTO product_prices (id, product_id, billing_mode, price_cents, created_at, updated_at)
-             SELECT ?, ?, ?, ?, NOW(), NOW()
-             FROM DUAL
-             WHERE NOT EXISTS (SELECT 1 FROM product_prices WHERE billing_mode = ?)',
-            [$pricePerMap, $productId, 'per_map', 599, 'per_map'],
+            'INSERT INTO product_prices (id, product_id, billing_mode, price_cents, mp_plan_id)
+             SELECT ?, ?, ?, ?, NULL
+             WHERE NOT EXISTS (
+               SELECT 1 FROM product_prices WHERE product_id = ? AND billing_mode = ?
+             )',
+            [$pricePerMap, $productId, 'per_map', 599, $productId, 'per_map'],
         );
     }
 
     public function down(Schema $schema): void
     {
         $this->addSql("DELETE FROM product_prices WHERE billing_mode = 'per_map'");
-        $this->addSql('ALTER TABLE orders DROP FOREIGN KEY FK_orders_couple_map');
-        $this->addSql('DROP INDEX uniq_orders_couple_map ON orders');
-        $this->addSql('ALTER TABLE orders DROP couple_map_id');
-        $this->addSql('DROP TABLE map_place_media');
-        $this->addSql('DROP TABLE map_places');
-        $this->addSql('DROP TABLE couple_maps');
+
+        if ($this->foreignKeyExists('orders', 'FK_orders_couple_map')) {
+            $this->addSql('ALTER TABLE orders DROP FOREIGN KEY FK_orders_couple_map');
+        }
+
+        if ($this->indexExists('orders', 'uniq_orders_couple_map')) {
+            $this->addSql('DROP INDEX uniq_orders_couple_map ON orders');
+        }
+
+        if ($this->columnExists('orders', 'couple_map_id')) {
+            $this->addSql('ALTER TABLE orders DROP couple_map_id');
+        }
+
+        $this->addSql('DROP TABLE IF EXISTS map_place_media');
+        $this->addSql('DROP TABLE IF EXISTS map_places');
+        $this->addSql('DROP TABLE IF EXISTS couple_maps');
+    }
+
+    private function columnExists(string $table, string $column): bool
+    {
+        $count = $this->connection->fetchOne(
+            'SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+            [$table, $column],
+        );
+
+        return (int) $count > 0;
+    }
+
+    private function indexExists(string $table, string $index): bool
+    {
+        $count = $this->connection->fetchOne(
+            'SELECT COUNT(*) FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?',
+            [$table, $index],
+        );
+
+        return (int) $count > 0;
+    }
+
+    private function foreignKeyExists(string $table, string $constraint): bool
+    {
+        $count = $this->connection->fetchOne(
+            'SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ? AND CONSTRAINT_TYPE = ?',
+            [$table, $constraint, 'FOREIGN KEY'],
+        );
+
+        return (int) $count > 0;
     }
 }
