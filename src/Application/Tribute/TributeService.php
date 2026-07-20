@@ -246,6 +246,11 @@ final class TributeService
             $content = $this->mergeContentCustomization($content, $incoming);
 
             $tribute->setContentJson($content);
+
+            $specialConfig = $content['special_date_config'] ?? null;
+            if (is_array($specialConfig) && ($specialConfig['enabled'] ?? false) === false) {
+                $tribute->setSpecialDate(null);
+            }
         }
 
         $this->tributeRepository->save($tribute);
@@ -538,6 +543,17 @@ final class TributeService
                 $content['wizard_category_slug'] = mb_substr(trim($value), 0, 80);
             } else {
                 throw new TributeException('Categoria do wizard inválida.', 'VALIDATION_ERROR', 400);
+            }
+        }
+
+        if (array_key_exists('wizard_type_id', $incoming)) {
+            $value = $incoming['wizard_type_id'];
+            if ($value === null || $value === '') {
+                unset($content['wizard_type_id']);
+            } elseif (is_string($value)) {
+                $content['wizard_type_id'] = mb_substr(trim($value), 0, 80);
+            } else {
+                throw new TributeException('Tipo do wizard inválido.', 'VALIDATION_ERROR', 400);
             }
         }
 
