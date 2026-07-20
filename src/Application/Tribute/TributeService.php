@@ -408,6 +408,14 @@ final class TributeService
                             $entry[$field] = mb_substr(trim($item[$field]), 0, $max);
                         }
                     }
+                    foreach (['location' => 120, 'emotion' => 40] as $field => $max) {
+                        if (isset($item[$field]) && is_string($item[$field]) && trim($item[$field]) !== '') {
+                            $entry[$field] = mb_substr(trim($item[$field]), 0, $max);
+                        }
+                    }
+                    if (isset($item['video_url']) && is_string($item['video_url']) && preg_match('#^https?://#i', trim($item['video_url'])) === 1) {
+                        $entry['video_url'] = mb_substr(trim($item['video_url']), 0, 500);
+                    }
                     if ($photoUrl !== '') {
                         $entry['photo_url'] = mb_substr($photoUrl, 0, 500);
                     }
@@ -509,6 +517,74 @@ final class TributeService
                 }
             } else {
                 throw new TributeException('Informações de evento inválidas.', 'VALIDATION_ERROR', 400);
+            }
+        }
+
+        if (array_key_exists('wizard_category_slug', $incoming)) {
+            $value = $incoming['wizard_category_slug'];
+            if ($value === null || $value === '') {
+                unset($content['wizard_category_slug']);
+            } elseif (is_string($value)) {
+                $content['wizard_category_slug'] = mb_substr(trim($value), 0, 80);
+            } else {
+                throw new TributeException('Categoria do wizard inválida.', 'VALIDATION_ERROR', 400);
+            }
+        }
+
+        if (array_key_exists('special_date_config', $incoming)) {
+            $config = $incoming['special_date_config'];
+            if ($config === null) {
+                unset($content['special_date_config']);
+            } elseif (is_array($config)) {
+                $entry = [];
+                if (array_key_exists('enabled', $config) && is_bool($config['enabled'])) {
+                    $entry['enabled'] = $config['enabled'];
+                }
+                $allowedKinds = ['first_meeting', 'first_kiss', 'dating_proposal', 'wedding', 'anniversary', 'custom'];
+                if (isset($config['kind']) && is_string($config['kind']) && in_array($config['kind'], $allowedKinds, true)) {
+                    $entry['kind'] = $config['kind'];
+                }
+                foreach (['date' => 20, 'time' => 10, 'title' => 120, 'description' => 500] as $field => $max) {
+                    if (isset($config[$field]) && is_string($config[$field]) && trim($config[$field]) !== '') {
+                        $entry[$field] = mb_substr(trim($config[$field]), 0, $max);
+                    }
+                }
+                $allowedCounter = ['countdown', 'since', 'none'];
+                if (isset($config['counter_mode']) && is_string($config['counter_mode']) && in_array($config['counter_mode'], $allowedCounter, true)) {
+                    $entry['counter_mode'] = $config['counter_mode'];
+                }
+                $allowedFormats = ['compact', 'card', 'hero', 'inline'];
+                if (isset($config['display_format']) && is_string($config['display_format']) && in_array($config['display_format'], $allowedFormats, true)) {
+                    $entry['display_format'] = $config['display_format'];
+                }
+                if ($entry === [] || ($entry['enabled'] ?? false) === false) {
+                    $content['special_date_config'] = ['enabled' => false];
+                } else {
+                    $content['special_date_config'] = $entry;
+                }
+            } else {
+                throw new TributeException('Configuração de data especial inválida.', 'VALIDATION_ERROR', 400);
+            }
+        }
+
+        if (array_key_exists('modules', $incoming)) {
+            $modules = $incoming['modules'];
+            if ($modules === null) {
+                unset($content['modules']);
+            } elseif (is_array($modules)) {
+                $allowedModules = [
+                    'digital_album', 'letter', 'timeline', 'couple_map', 'digital_book',
+                    'quiz', 'playlist', 'night_sky', 'qr_code', 'comments', 'reactions', 'gifts',
+                ];
+                $entry = [];
+                foreach ($allowedModules as $key) {
+                    if (array_key_exists($key, $modules) && is_bool($modules[$key])) {
+                        $entry[$key] = $modules[$key];
+                    }
+                }
+                $content['modules'] = $entry;
+            } else {
+                throw new TributeException('Módulos inválidos.', 'VALIDATION_ERROR', 400);
             }
         }
 

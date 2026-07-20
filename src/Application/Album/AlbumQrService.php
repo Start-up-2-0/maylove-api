@@ -19,13 +19,14 @@ final class AlbumQrService
     public function build(Album $album, ?string $memoryId = null): array
     {
         $base = rtrim($this->appUrl, '/');
-        $publicUrl = $base.'/h/'.$album->getSlug();
+        $publicUrl = $base.'/a/'.$album->getSlug();
         $deepLink = $memoryId !== null ? $publicUrl.'?m='.$memoryId : $publicUrl;
 
         return [
             'slug' => $album->getSlug(),
             'public_url' => $publicUrl,
             'deep_link' => $deepLink,
+            'url' => $publicUrl,
             'memory_id' => $memoryId,
         ];
     }

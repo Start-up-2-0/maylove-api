@@ -99,6 +99,11 @@ final class PublicTributeSerializer
             'style_id', 'presentation', 'font', 'background', 'effects',
             'animation_speed', 'entrance', 'photo_style', 'text_style',
             'question', 'celebration', 'section_order',
+            'special_date_config', 'timeline', 'messages', 'event_info',
+            'sender_name', 'signature', 'video_url', 'modules',
+            'music_autoplay', 'music_loop', 'music_start_seconds',
+            'music_end_seconds', 'music_duration_seconds',
+            'include_opening_message', 'include_closing_message',
         ];
 
         return array_intersect_key($contentJson, array_flip($allowed));
