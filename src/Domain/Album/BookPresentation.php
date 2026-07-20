@@ -18,6 +18,7 @@ enum BookPresentation: string
     case MagazineStyle = 'magazine-style';
     case LuxuryAlbum = 'luxury-album';
     case Timeline = 'timeline';
+    case MemorialLuz = 'memorial-luz';
 
     /** @deprecated slugs legados — mantidos para álbuns existentes */
     case FamilyAlbum = 'family-album';
@@ -41,6 +42,7 @@ enum BookPresentation: string
             self::MagazineStyle => 'Magazine Style',
             self::LuxuryAlbum => 'Luxury Album',
             self::Timeline => 'Linha do Tempo',
+            self::MemorialLuz => 'Memorial Digital',
             self::FamilyAlbum => 'Family Memories',
             self::Polaroid => 'Polaroid Memories',
             self::MemoryNotebook => 'Travel Journal',

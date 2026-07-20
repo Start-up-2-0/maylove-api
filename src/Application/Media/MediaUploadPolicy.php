@@ -12,6 +12,8 @@ final class MediaUploadPolicy
   public const MAX_PHOTO_UPLOAD_BYTES = 15 * 1024 * 1024;
   public const MAX_AUDIO_UPLOAD_BYTES = 10 * 1024 * 1024;
   public const MAX_PHOTOS_PER_ALBUM = 40;
+  public const MAX_PLACES_PER_MAP = 30;
+  public const MAX_MEDIA_PER_MAP_PLACE = 10;
   public const MAX_IMAGE_LONG_EDGE = 2560;
 
   /**
@@ -35,6 +37,29 @@ final class MediaUploadPolicy
         'max_count_per_album' => 1,
         'output_format_hint' => 'MP3 128 kbps (otimizado automaticamente após o envio)',
       ],
+    ];
+  }
+
+  /**
+   * @return array<string, mixed>
+   */
+  public function mapPolicy(): array
+  {
+    return [
+      'photo' => [
+        'accepted_mimes' => self::PHOTO_MIMES,
+        'accepted_extensions' => ['jpg', 'jpeg', 'png', 'webp'],
+        'max_file_bytes' => self::MAX_PHOTO_UPLOAD_BYTES,
+        'max_long_edge_px' => self::MAX_IMAGE_LONG_EDGE,
+        'max_count_per_place' => self::MAX_MEDIA_PER_MAP_PLACE,
+      ],
+      'video' => [
+        'accepted_mimes' => ['video/mp4'],
+        'accepted_extensions' => ['mp4'],
+        'max_file_bytes' => 100 * 1024 * 1024,
+        'max_count_per_place' => self::MAX_MEDIA_PER_MAP_PLACE,
+      ],
+      'max_places_per_map' => self::MAX_PLACES_PER_MAP,
     ];
   }
 }

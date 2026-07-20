@@ -27,6 +27,7 @@ final class MercadoPagoWebhookProcessor
         private readonly PaymentRepository $paymentRepository,
         private readonly TributePublicationService $tributePublicationService,
         private readonly AlbumPublicationService $albumPublicationService,
+        private readonly CoupleMapPublicationService $coupleMapPublicationService,
         private readonly SubscriptionCapabilityService $subscriptionCapability,
     ) {
     }
@@ -146,6 +147,13 @@ final class MercadoPagoWebhookProcessor
         $album = $order->getAlbum();
         if ($album !== null) {
             $this->albumPublicationService->publishFromPayment($album);
+
+            return;
+        }
+
+        $map = $order->getCoupleMap();
+        if ($map !== null) {
+            $this->coupleMapPublicationService->publishFromPayment($map);
         }
     }
 

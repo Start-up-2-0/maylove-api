@@ -16,6 +16,7 @@ final class BookPresentationCatalogService
         // Catálogo público: Memory Book + murais (Polaroid / Retrato).
         $canonical = [
             BookPresentation::ClassicPhotobook,
+            BookPresentation::MemorialLuz,
             BookPresentation::PolaroidBoard,
             BookPresentation::PortraitAlbum,
             BookPresentation::InstantPhoto,
@@ -46,6 +47,7 @@ final class BookPresentationCatalogService
             BookPresentation::MagazineStyle => 'Layout editorial ousado. Tipografia forte e fotos em múltiplas proporções.',
             BookPresentation::LuxuryAlbum => 'Acabamento premium. Imagens grandes, pouco texto e muito espaço em branco.',
             BookPresentation::Timeline => 'Momentos em ordem cronológica com rolagem vertical contínua.',
+            BookPresentation::MemorialLuz => 'Homenagem serena com biografia, linha do tempo, recordações e tributos de visitantes.',
             BookPresentation::FamilyAlbum => 'Álbum de família acolhedor. Páginas quentes com espaço para relatos e datas.',
             BookPresentation::Polaroid => 'Molduras instantâneas com anotações manuscritas na margem branca.',
             BookPresentation::MemoryNotebook => 'Diário de viagem editorial. Datas e relatos por destino.',

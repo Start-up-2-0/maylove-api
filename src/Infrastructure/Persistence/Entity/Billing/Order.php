@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence\Entity\Billing;
 
 use App\Domain\Billing\OrderStatus;
 use App\Infrastructure\Persistence\Entity\Album;
+use App\Infrastructure\Persistence\Entity\CoupleMap;
 use App\Infrastructure\Persistence\Entity\Tribute;
 use App\Infrastructure\Persistence\Entity\User;
 use Doctrine\DBAL\Types\Types;
@@ -16,6 +17,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Table(name: 'orders')]
 #[ORM\UniqueConstraint(name: 'uniq_orders_tribute', columns: ['tribute_id'])]
 #[ORM\UniqueConstraint(name: 'uniq_orders_album', columns: ['album_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_orders_couple_map', columns: ['couple_map_id'])]
 #[ORM\HasLifecycleCallbacks]
 class Order
 {
@@ -34,6 +36,10 @@ class Order
     #[ORM\ManyToOne(targetEntity: Album::class)]
     #[ORM\JoinColumn(name: 'album_id', referencedColumnName: 'id', nullable: true)]
     private ?Album $album = null;
+
+    #[ORM\ManyToOne(targetEntity: CoupleMap::class)]
+    #[ORM\JoinColumn(name: 'couple_map_id', referencedColumnName: 'id', nullable: true)]
+    private ?CoupleMap $coupleMap = null;
 
     #[ORM\ManyToOne(targetEntity: ProductPrice::class)]
     #[ORM\JoinColumn(name: 'product_price_id', referencedColumnName: 'id', nullable: false)]
@@ -82,15 +88,18 @@ class Order
         string $externalReference,
         ?Tribute $tribute = null,
         ?Album $album = null,
+        ?CoupleMap $coupleMap = null,
     ) {
-        if (($tribute === null) === ($album === null)) {
-            throw new \InvalidArgumentException('Order must reference exactly one of tribute or album.');
+        $refCount = ($tribute !== null ? 1 : 0) + ($album !== null ? 1 : 0) + ($coupleMap !== null ? 1 : 0);
+        if ($refCount !== 1) {
+            throw new \InvalidArgumentException('Order must reference exactly one product.');
         }
 
         $this->id = Uuid::v7();
         $this->user = $user;
         $this->tribute = $tribute;
         $this->album = $album;
+        $this->coupleMap = $coupleMap;
         $this->productPrice = $productPrice;
         $this->amountCents = $amountCents;
         $this->externalReference = $externalReference !== '' ? $externalReference : 'order:'.(string) $this->id;
@@ -104,7 +113,7 @@ class Order
         ProductPrice $productPrice,
         int $amountCents,
     ): self {
-        return new self($user, $productPrice, $amountCents, '', $tribute, null);
+        return new self($user, $productPrice, $amountCents, '', $tribute, null, null);
     }
 
     public static function forAlbum(
@@ -113,7 +122,16 @@ class Order
         ProductPrice $productPrice,
         int $amountCents,
     ): self {
-        return new self($user, $productPrice, $amountCents, '', null, $album);
+        return new self($user, $productPrice, $amountCents, '', null, $album, null);
+    }
+
+    public static function forCoupleMap(
+        User $user,
+        CoupleMap $coupleMap,
+        ProductPrice $productPrice,
+        int $amountCents,
+    ): self {
+        return new self($user, $productPrice, $amountCents, '', null, null, $coupleMap);
     }
 
     public function getId(): Uuid
@@ -134,6 +152,11 @@ class Order
     public function getAlbum(): ?Album
     {
         return $this->album;
+    }
+
+    public function getCoupleMap(): ?CoupleMap
+    {
+        return $this->coupleMap;
     }
 
     public function getProductPrice(): ProductPrice

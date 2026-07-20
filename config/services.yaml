@@ -133,6 +133,18 @@ services:
         arguments:
             $billingEnabled: '%billing.enabled%'
 
+    App\Application\Map\CoupleMapService:
+        arguments:
+            $emailVerificationEnabled: '%auth.email_verification_enabled%'
+
+    App\Application\Map\CoupleMapCheckoutService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
+
+    App\Application\Map\CoupleMapPublishService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
+
     App\UI\Http\Controller\Web\PublicTributePageController:
         arguments:
             $frontendUrl: '%app.url%'

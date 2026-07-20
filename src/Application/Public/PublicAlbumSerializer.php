@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Application\Public;
 
+use App\Application\Album\AlbumChapterSerializer;
+use App\Application\Album\AlbumMemorySerializer;
 use App\Application\Album\AlbumMusicConfig;
 use App\Domain\Album\AlbumMediaType;
 use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\AlbumMedia;
+use App\Infrastructure\Persistence\Repository\AlbumChapterRepository;
 use App\Infrastructure\Persistence\Repository\AlbumMediaRepository;
+use App\Infrastructure\Persistence\Repository\AlbumMemoryRepository;
 use App\Infrastructure\Storage\StorageApiClient;
 
 final class PublicAlbumSerializer
@@ -17,6 +21,10 @@ final class PublicAlbumSerializer
 
     public function __construct(
         private readonly AlbumMediaRepository $mediaRepository,
+        private readonly AlbumChapterRepository $chapterRepository,
+        private readonly AlbumMemoryRepository $memoryRepository,
+        private readonly AlbumChapterSerializer $chapterSerializer,
+        private readonly AlbumMemorySerializer $memorySerializer,
         private readonly StorageApiClient $storageApiClient,
     ) {
     }
@@ -43,6 +51,9 @@ final class PublicAlbumSerializer
             'slug' => $album->getSlug(),
             'title' => $album->getTitle(),
             'subtitle' => $album->getSubtitle(),
+            'category' => $album->getCategory()->value,
+            'honoree_names' => $album->getHonoreeNames(),
+            'dedication' => $album->getClosingMessage(),
             'closing_message' => $album->getClosingMessage(),
             'signature' => $album->getSignature(),
             'color_primary' => $album->getColorPrimary(),
@@ -53,8 +64,38 @@ final class PublicAlbumSerializer
             'published_at' => $album->getPublishedAt()?->format(\DateTimeInterface::ATOM),
             'views_count' => $album->getViewsCount(),
             'photos' => array_map(fn (AlbumMedia $item) => $this->serializeMedia($item), $photos),
+            'media' => array_map(fn (AlbumMedia $item) => $this->serializeMedia($item), $photos),
+            'chapters' => $this->serializeChapters($album),
+            'experiences' => [],
             'music' => $this->serializeMusic($album, $audioMedia),
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function serializeChapters(Album $album): array
+    {
+        $chapters = $this->chapterRepository->findOrderedByAlbum($album);
+        $result = [];
+
+        foreach ($chapters as $chapter) {
+            $data = $this->chapterSerializer->serialize($chapter);
+            $memories = $this->memoryRepository->findOrderedByChapter($chapter);
+            $data['memories'] = array_map(function ($memory) {
+                $serialized = $this->memorySerializer->serialize($memory);
+                $contentJson = $memory->getContentJson();
+                $serialized['media_ids'] = is_array($contentJson['media_ids'] ?? null)
+                    ? array_map('strval', $contentJson['media_ids'])
+                    : [];
+                $serialized['media'] = [];
+
+                return $serialized;
+            }, $memories);
+            $result[] = $data;
+        }
+
+        return $result;
     }
 
     /**
@@ -102,6 +143,7 @@ final class PublicAlbumSerializer
         return [
             'id' => (string) $media->getId(),
             'url' => $url,
+            'media_type' => $media->getMediaType()->value,
             'title' => $media->getTitle(),
             'caption' => $media->getCaption(),
             'memory_date' => $media->getMemoryDate(),

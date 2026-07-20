@@ -10,6 +10,7 @@ use App\Domain\Billing\ProductBillingMode;
 use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Payment\MercadoPagoClient;
 use App\Infrastructure\Persistence\Entity\Album;
+use App\Infrastructure\Persistence\Entity\CoupleMap;
 use App\Infrastructure\Persistence\Entity\Billing\Order;
 use App\Infrastructure\Persistence\Entity\Billing\ProductPrice;
 use App\Infrastructure\Persistence\Entity\Tribute;
@@ -74,6 +75,29 @@ final class OrderCheckoutService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function checkoutCoupleMap(CoupleMap $map, User $user): array
+    {
+        $price = $this->requirePrice(ProductBillingMode::PerMap);
+        $order = $this->orderRepository->findByCoupleMap($map);
+
+        return $this->checkoutOrder(
+            $order,
+            $user,
+            $price,
+            fn () => Order::forCoupleMap($user, $map, $price, $price->getPriceCents()),
+            $map->getTitle() ?: 'Mapa do Casal MayLov',
+            [
+                'kind' => 'map',
+                'tribute_id' => null,
+                'album_id' => null,
+                'couple_map_id' => (string) $map->getId(),
+            ],
+        );
+    }
+
+    /**
      * @deprecated use checkoutTribute
      *
      * @return array<string, mixed>
@@ -120,7 +144,7 @@ final class OrderCheckoutService
 
     /**
      * @param callable(): Order $factory
-     * @param array{kind: string, tribute_id: ?string, album_id: ?string} $meta
+     * @param array{kind: string, tribute_id: ?string, album_id: ?string, couple_map_id?: ?string} $meta
      *
      * @return array<string, mixed>
      */
@@ -186,7 +210,7 @@ final class OrderCheckoutService
     }
 
     /**
-     * @param array{kind: string, tribute_id: ?string, album_id: ?string} $meta
+     * @param array{kind: string, tribute_id: ?string, album_id: ?string, couple_map_id?: ?string} $meta
      *
      * @return array<string, mixed>
      */
@@ -197,6 +221,7 @@ final class OrderCheckoutService
             'kind' => $meta['kind'],
             'tribute_id' => $meta['tribute_id'],
             'album_id' => $meta['album_id'],
+            'couple_map_id' => $meta['couple_map_id'] ?? null,
             'status' => $order->getStatus()->value,
             'price_cents' => $order->getAmountCents(),
             'payment_method' => 'pix',
@@ -221,6 +246,7 @@ final class OrderCheckoutService
             'payment_method' => 'pix',
             'tribute_id' => $order->getTribute() !== null ? (string) $order->getTribute()->getId() : null,
             'album_id' => $order->getAlbum() !== null ? (string) $order->getAlbum()->getId() : null,
+            'couple_map_id' => $order->getCoupleMap() !== null ? (string) $order->getCoupleMap()->getId() : null,
             'checkout_url' => $order->getCheckoutUrl(),
             'pix' => [
                 'qr_code' => $order->getPixQrCode(),

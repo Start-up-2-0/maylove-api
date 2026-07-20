@@ -58,7 +58,7 @@ final class SubscriptionService
     public function startCheckout(User $user, string $billingMode): array
     {
         $mode = ProductBillingMode::tryFrom($billingMode);
-        if ($mode === null || $mode === ProductBillingMode::PerTribute || $mode === ProductBillingMode::PerAlbum) {
+        if ($mode === null || $mode === ProductBillingMode::PerTribute || $mode === ProductBillingMode::PerAlbum || $mode === ProductBillingMode::PerMap) {
             throw new BillingException('Modo de assinatura inválido.', 'VALIDATION_ERROR', 400);
         }
 

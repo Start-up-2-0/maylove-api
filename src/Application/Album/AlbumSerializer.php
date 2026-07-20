@@ -33,8 +33,10 @@ final class AlbumSerializer
             'id' => (string) $album->getId(),
             'slug' => $album->getSlug(),
             'status' => $album->getStatus()->value,
+            'category' => $album->getCategory()->value,
             'title' => $album->getTitle(),
             'subtitle' => $album->getSubtitle(),
+            'honoree_names' => $album->getHonoreeNames(),
             'color_primary' => $album->getColorPrimary(),
             'presentation' => $album->getPresentation()->value,
             'photos_per_page' => $album->getPhotosPerPage(),
@@ -55,6 +57,7 @@ final class AlbumSerializer
     public function serializeDetail(Album $album): array
     {
         $data = $this->serializeSummary($album);
+        $data['dedication'] = $album->getClosingMessage();
         $data['closing_message'] = $album->getClosingMessage();
         $data['signature'] = $album->getSignature();
         $data['music_media_id'] = $album->getMusicMediaId() !== null

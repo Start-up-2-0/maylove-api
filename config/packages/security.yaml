@@ -35,6 +35,7 @@ security:
         - { path: ^/api/v1/public/tributes, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/albums/book-presentations, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/public/albums, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/public/maps, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

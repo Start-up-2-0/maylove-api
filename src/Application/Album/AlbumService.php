@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Album;
 
+use App\Domain\Album\AlbumCategory;
 use App\Domain\Album\AlbumMediaType;
 use App\Domain\Album\BookPresentation;
 use App\Domain\Album\Exception\AlbumException;
@@ -98,6 +99,22 @@ final class AlbumService
         }
         if (array_key_exists('subtitle', $payload)) {
             $album->setSubtitle(is_string($payload['subtitle']) ? $payload['subtitle'] : null);
+        }
+        if (array_key_exists('category', $payload)) {
+            $category = is_string($payload['category']) ? trim($payload['category']) : '';
+            if ($category !== '') {
+                $parsed = AlbumCategory::tryFrom($category);
+                if ($parsed === null) {
+                    throw new AlbumException('Categoria do álbum inválida.', 'INVALID_CATEGORY', 422);
+                }
+                $album->setCategory($parsed);
+            }
+        }
+        if (array_key_exists('honoree_names', $payload)) {
+            $album->setHonoreeNames(is_string($payload['honoree_names']) ? $payload['honoree_names'] : null);
+        }
+        if (array_key_exists('dedication', $payload)) {
+            $album->setClosingMessage(is_string($payload['dedication']) ? $payload['dedication'] : null);
         }
         if (array_key_exists('closing_message', $payload)) {
             $album->setClosingMessage(is_string($payload['closing_message']) ? $payload['closing_message'] : null);
