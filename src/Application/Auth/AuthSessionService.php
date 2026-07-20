@@ -141,6 +141,8 @@ final class AuthSessionService
         if (
             $this->validateIpOnToken
             && $session->getIp() !== null
+            && $context->ip !== null
+            && $context->ip !== ''
             && $session->getIp() !== $context->ip
         ) {
             throw new InvalidTokenException();
@@ -149,6 +151,8 @@ final class AuthSessionService
         if (
             $this->validateUserAgentOnToken
             && $session->getUserAgent() !== null
+            && $context->userAgent !== null
+            && $context->userAgent !== ''
             && $session->getUserAgent() !== $context->userAgent
         ) {
             throw new InvalidTokenException();

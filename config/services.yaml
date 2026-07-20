@@ -1,7 +1,7 @@
 parameters:
 
-    # Fallback quando TRUSTED_PROXIES não estiver definido no ambiente.
-    trusted_proxies_default: '127.0.0.1'
+    # Railway/produção: REMOTE_ADDR confia no proxy imediato e usa X-Forwarded-For.
+    trusted_proxies_default: 'REMOTE_ADDR'
 
 services:
     _defaults:
