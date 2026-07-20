@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Entity;
 
+use App\Domain\Album\AlbumCategory;
 use App\Domain\Album\AlbumStatus;
 use App\Domain\Album\BookPresentation;
 use Doctrine\DBAL\Types\Types;
@@ -30,6 +31,12 @@ class Album
 
     #[ORM\Column(length: 30, enumType: AlbumStatus::class)]
     private AlbumStatus $status = AlbumStatus::Draft;
+
+    #[ORM\Column(length: 32, enumType: AlbumCategory::class)]
+    private AlbumCategory $category = AlbumCategory::Custom;
+
+    #[ORM\Column(name: 'honoree_names', length: 200, nullable: true)]
+    private ?string $honoreeNames = null;
 
     #[ORM\Column(length: 200, nullable: true)]
     private ?string $title = null;
@@ -125,6 +132,28 @@ class Album
     public function isEditable(): bool
     {
         return $this->status->isEditable() && $this->deletedAt === null;
+    }
+
+    public function getCategory(): AlbumCategory
+    {
+        return $this->category;
+    }
+
+    public function setCategory(AlbumCategory $category): void
+    {
+        $this->category = $category;
+        $this->touch();
+    }
+
+    public function getHonoreeNames(): ?string
+    {
+        return $this->honoreeNames;
+    }
+
+    public function setHonoreeNames(?string $honoreeNames): void
+    {
+        $this->honoreeNames = $honoreeNames !== null ? trim($honoreeNames) : null;
+        $this->touch();
     }
 
     public function getTitle(): ?string

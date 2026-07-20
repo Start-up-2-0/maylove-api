@@ -137,3 +137,14 @@ services:
     App\Application\Tribute\TributePublishedDispatcher:
         arguments:
             $appUrl: '%app.url%'
+
+    App\Application\Album\AlbumChapterService: ~
+    App\Application\Album\AlbumMemoryService: ~
+    App\Application\Album\AlbumExperienceService: ~
+    App\Application\Album\AlbumTimelineService: ~
+    App\Application\Album\AlbumChapterSerializer: ~
+    App\Application\Album\AlbumMemorySerializer: ~
+    App\Application\Album\AlbumExperienceSerializer: ~
+    App\Application\Album\AlbumQrService:
+        arguments:
+            $appUrl: '%app.url%'
