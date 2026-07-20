@@ -35,7 +35,31 @@ final class TributeValidationService
         $content = $tribute->getContentJson();
         $message = trim(strip_tags((string) $tribute->getMessage()));
         $presentation = is_string($content['presentation'] ?? null) ? $content['presentation'] : null;
-        $requirements = $this->schemaProvider->requirementsFor($presentation);
+
+        if ($presentation !== null && $presentation !== '' && !$this->schemaProvider->isValidPresentationId($presentation)) {
+            $warnings[] = $this->issue(
+                'presentation',
+                'INVALID_PRESENTATION',
+                'Estilo de apresentação desconhecido; validação usa requisitos padrão.',
+            );
+        }
+
+        $schema = $this->schemaProvider->schemaFor($presentation);
+        $requirements = [
+            'minPhotos' => $schema['minPhotos'],
+            'usesMoments' => $schema['usesMoments'],
+        ];
+
+        if (in_array('title', $schema['required'], true) && trim((string) $tribute->getTitle()) === '') {
+            $errors[] = $this->issue('title', 'REQUIRED', 'Defina um título para a homenagem.');
+        }
+
+        if ($schema['layout'] === 'proposal') {
+            $question = is_string($content['question'] ?? null) ? trim($content['question']) : '';
+            if ($question === '') {
+                $errors[] = $this->issue('question', 'REQUIRED', 'Informe a pergunta do pedido.');
+            }
+        }
 
         if (!$requirements['usesMoments'] && mb_strlen($message) < 10) {
             $errors[] = $this->issue('message', 'MIN_LENGTH', 'A mensagem deve ter pelo menos 10 caracteres.');

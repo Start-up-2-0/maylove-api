@@ -74,18 +74,106 @@ final class PresentationSchemaProvider
      */
     public function requirementsFor(?string $presentationId): array
     {
+        $schema = $this->schemaFor($presentationId);
+
+        return [
+            'minPhotos' => $schema['minPhotos'],
+            'usesMoments' => $schema['usesMoments'],
+        ];
+    }
+
+    /**
+     * Schema resumido para validação de conteúdo (paridade com presentationValidation.ts).
+     *
+     * @return array{layout: string, minPhotos: int, usesMoments: bool, required: list<string>}
+     */
+    public function schemaFor(?string $presentationId): array
+    {
         foreach ($this->presentations() as $p) {
             if (($p['id'] ?? null) === $presentationId) {
                 $layout = (string) $p['layout'];
+                $usesMoments = in_array($layout, self::MOMENT_LAYOUTS, true);
 
                 return [
+                    'layout' => $layout,
                     'minPhotos' => self::MIN_PHOTOS[$layout] ?? 1,
-                    'usesMoments' => in_array($layout, self::MOMENT_LAYOUTS, true),
+                    'usesMoments' => $usesMoments,
+                    'required' => $usesMoments ? ['title'] : ['title', 'message'],
                 ];
             }
         }
 
-        return ['minPhotos' => 1, 'usesMoments' => false];
+        return [
+            'layout' => 'scroll',
+            'minPhotos' => 1,
+            'usesMoments' => false,
+            'required' => ['title', 'message'],
+        ];
+    }
+
+    public function isValidPresentationId(?string $presentationId): bool
+    {
+        if ($presentationId === null || $presentationId === '') {
+            return true;
+        }
+
+        return $this->layoutFor($presentationId) !== null;
+    }
+
+    public function layoutFor(?string $presentationId): ?string
+    {
+        if ($presentationId === null || $presentationId === '') {
+            return null;
+        }
+
+        foreach ($this->presentations() as $p) {
+            if (($p['id'] ?? null) === $presentationId) {
+                return (string) $p['layout'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Normaliza módulos estruturais (letter, timeline, digital_album) conforme o layout
+     * da apresentação — paridade com maylove-app/src/utils/tributeModules.ts.
+     *
+     * @param array<string, bool> $modules
+     *
+     * @return array<string, bool>
+     */
+    public function normalizeModules(array $modules, ?string $presentationId): array
+    {
+        $defaults = [
+            'digital_album' => false,
+            'letter' => false,
+            'timeline' => true,
+            'couple_map' => false,
+            'digital_book' => false,
+            'quiz' => false,
+            'playlist' => false,
+            'night_sky' => false,
+            'qr_code' => true,
+            'comments' => false,
+            'reactions' => false,
+            'gifts' => false,
+        ];
+
+        $merged = $defaults;
+        foreach ($defaults as $key => $_) {
+            if (array_key_exists($key, $modules) && is_bool($modules[$key])) {
+                $merged[$key] = $modules[$key];
+            }
+        }
+
+        $layout = $this->layoutFor($presentationId) ?? 'scroll';
+        $letterLayouts = ['letter', 'envelope'];
+        $merged['letter'] = in_array($layout, $letterLayouts, true);
+        $merged['timeline'] = true;
+        $merged['digital_album'] = $layout === 'album';
+
+        return $merged;
     }
 
     /**

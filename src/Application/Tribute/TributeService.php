@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Tribute;
 
 use App\Application\Billing\PendingOrderInvalidationService;
+use App\Application\Wizard\PresentationSchemaProvider;
 use App\Domain\Shared\UuidValue;
 use App\Domain\Tribute\Exception\TributeException;
 use App\Domain\Tribute\MusicSource;
@@ -27,6 +28,7 @@ final class TributeService
         private readonly MusicTrackRepository $musicTrackRepository,
         private readonly TributeSlugGenerator $slugGenerator,
         private readonly PendingOrderInvalidationService $pendingOrderInvalidation,
+        private readonly PresentationSchemaProvider $schemaProvider,
         private readonly UserRepository $userRepository,
         private readonly bool $emailVerificationEnabled,
     ) {
@@ -274,7 +276,15 @@ final class TributeService
             if ($value === null || $value === '') {
                 unset($content[$key]);
             } elseif (is_string($value)) {
-                $content[$key] = mb_substr(trim($value), 0, 80);
+                $trimmed = mb_substr(trim($value), 0, 80);
+                if ($key === 'presentation' && $trimmed !== '' && !$this->schemaProvider->isValidPresentationId($trimmed)) {
+                    throw new TributeException(
+                        'Estilo de apresentação inválido.',
+                        'INVALID_PRESENTATION',
+                        400,
+                    );
+                }
+                $content[$key] = $trimmed;
             } else {
                 throw new TributeException(sprintf('Valor inválido para %s.', $key), 'VALIDATION_ERROR', 400);
             }
@@ -587,6 +597,26 @@ final class TributeService
                 throw new TributeException('Módulos inválidos.', 'VALIDATION_ERROR', 400);
             }
         }
+
+        return $this->normalizeContentModules($content);
+    }
+
+    /**
+     * Alinha módulos estruturais (carta, timeline, álbum) ao layout da apresentação.
+     *
+     * @param array<string, mixed> $content
+     *
+     * @return array<string, mixed>
+     */
+    private function normalizeContentModules(array $content): array
+    {
+        $presentation = is_string($content['presentation'] ?? null) ? $content['presentation'] : null;
+        if ($presentation === null || $presentation === '') {
+            return $content;
+        }
+
+        $modules = is_array($content['modules'] ?? null) ? $content['modules'] : [];
+        $content['modules'] = $this->schemaProvider->normalizeModules($modules, $presentation);
 
         return $content;
     }
