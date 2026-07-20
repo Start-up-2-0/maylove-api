@@ -1,5 +1,8 @@
 parameters:
 
+    # Fallback quando TRUSTED_PROXIES não estiver definido no ambiente.
+    trusted_proxies_default: '127.0.0.1'
+
 services:
     _defaults:
         autowire: true
