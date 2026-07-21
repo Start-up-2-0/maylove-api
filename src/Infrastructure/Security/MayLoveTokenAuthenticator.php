@@ -113,7 +113,7 @@ final class MayLoveTokenAuthenticator extends AbstractAuthenticator implements A
     private function isPublicPath(string $path): bool
     {
         return (bool) preg_match(
-            '#^/api/v1/(health(?:/.*)?|auth/login|auth/refresh|auth/register|auth/verify-email|tribute-types|templates|presentations|billing/product|music-tracks|public/tributes|public/albums|albums/book-presentations)(/|$)#',
+            '#^/api/v1/(health(?:/.*)?|auth/login|auth/refresh|auth/register|auth/verify-email|tribute-types|templates|presentations|billing/product|music-tracks|public/tributes|public/albums|public/maps|public/bouquets|albums/book-presentations)(/|$)#',
             $path,
         );
     }
