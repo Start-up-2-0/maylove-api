@@ -557,6 +557,20 @@ final class TributeService
             }
         }
 
+        foreach (['romance_theme_id', 'retrospective_palette_id', 'romance_experience_id'] as $key) {
+            if (!array_key_exists($key, $incoming)) {
+                continue;
+            }
+            $value = $incoming[$key];
+            if ($value === null || $value === '') {
+                unset($content[$key]);
+            } elseif (is_string($value)) {
+                $content[$key] = mb_substr(trim($value), 0, 80);
+            } else {
+                throw new TributeException(sprintf('Valor inválido para %s.', $key), 'VALIDATION_ERROR', 400);
+            }
+        }
+
         if (array_key_exists('special_date_config', $incoming)) {
             $config = $incoming['special_date_config'];
             if ($config === null) {

@@ -104,6 +104,7 @@ final class PublicTributeSerializer
             'music_autoplay', 'music_loop', 'music_start_seconds',
             'music_end_seconds', 'music_duration_seconds',
             'include_opening_message', 'include_closing_message',
+            'romance_theme_id', 'retrospective_palette_id', 'romance_experience_id',
         ];
 
         return array_intersect_key($contentJson, array_flip($allowed));
