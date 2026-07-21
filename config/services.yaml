@@ -145,6 +145,18 @@ services:
         arguments:
             $billingEnabled: '%billing.enabled%'
 
+    App\Application\Bouquet\DigitalBouquetService:
+        arguments:
+            $emailVerificationEnabled: '%auth.email_verification_enabled%'
+
+    App\Application\Bouquet\DigitalBouquetCheckoutService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
+
+    App\Application\Bouquet\DigitalBouquetPublishService:
+        arguments:
+            $billingEnabled: '%billing.enabled%'
+
     App\UI\Http\Controller\Web\PublicTributePageController:
         arguments:
             $frontendUrl: '%app.url%'

@@ -11,6 +11,7 @@ use App\Domain\Shared\UuidValue;
 use App\Infrastructure\Payment\MercadoPagoClient;
 use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\CoupleMap;
+use App\Infrastructure\Persistence\Entity\DigitalBouquet;
 use App\Infrastructure\Persistence\Entity\Billing\Order;
 use App\Infrastructure\Persistence\Entity\Billing\ProductPrice;
 use App\Infrastructure\Persistence\Entity\Tribute;
@@ -98,6 +99,30 @@ final class OrderCheckoutService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function checkoutDigitalBouquet(DigitalBouquet $bouquet, User $user): array
+    {
+        $price = $this->requirePrice(ProductBillingMode::PerBouquet);
+        $order = $this->orderRepository->findByDigitalBouquet($bouquet);
+
+        return $this->checkoutOrder(
+            $order,
+            $user,
+            $price,
+            fn () => Order::forDigitalBouquet($user, $bouquet, $price, $price->getPriceCents()),
+            $bouquet->getTitle() ?: 'Buquê Digital MayLov',
+            [
+                'kind' => 'bouquet',
+                'tribute_id' => null,
+                'album_id' => null,
+                'couple_map_id' => null,
+                'digital_bouquet_id' => (string) $bouquet->getId(),
+            ],
+        );
+    }
+
+    /**
      * @deprecated use checkoutTribute
      *
      * @return array<string, mixed>
@@ -144,7 +169,7 @@ final class OrderCheckoutService
 
     /**
      * @param callable(): Order $factory
-     * @param array{kind: string, tribute_id: ?string, album_id: ?string, couple_map_id?: ?string} $meta
+     * @param array{kind: string, tribute_id: ?string, album_id: ?string, couple_map_id?: ?string, digital_bouquet_id?: ?string} $meta
      *
      * @return array<string, mixed>
      */
@@ -210,7 +235,7 @@ final class OrderCheckoutService
     }
 
     /**
-     * @param array{kind: string, tribute_id: ?string, album_id: ?string, couple_map_id?: ?string} $meta
+     * @param array{kind: string, tribute_id: ?string, album_id: ?string, couple_map_id?: ?string, digital_bouquet_id?: ?string} $meta
      *
      * @return array<string, mixed>
      */
@@ -222,6 +247,7 @@ final class OrderCheckoutService
             'tribute_id' => $meta['tribute_id'],
             'album_id' => $meta['album_id'],
             'couple_map_id' => $meta['couple_map_id'] ?? null,
+            'digital_bouquet_id' => $meta['digital_bouquet_id'] ?? null,
             'status' => $order->getStatus()->value,
             'price_cents' => $order->getAmountCents(),
             'payment_method' => 'pix',
@@ -247,6 +273,7 @@ final class OrderCheckoutService
             'tribute_id' => $order->getTribute() !== null ? (string) $order->getTribute()->getId() : null,
             'album_id' => $order->getAlbum() !== null ? (string) $order->getAlbum()->getId() : null,
             'couple_map_id' => $order->getCoupleMap() !== null ? (string) $order->getCoupleMap()->getId() : null,
+            'digital_bouquet_id' => $order->getDigitalBouquet() !== null ? (string) $order->getDigitalBouquet()->getId() : null,
             'checkout_url' => $order->getCheckoutUrl(),
             'pix' => [
                 'qr_code' => $order->getPixQrCode(),

@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence\Repository\Billing;
 
 use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\CoupleMap;
+use App\Infrastructure\Persistence\Entity\DigitalBouquet;
 use App\Infrastructure\Persistence\Entity\Billing\Order;
 use App\Infrastructure\Persistence\Entity\Tribute;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -37,6 +38,11 @@ final class OrderRepository extends ServiceEntityRepository
         return $this->findOneBy(['coupleMap' => $map], ['createdAt' => 'DESC']);
     }
 
+    public function findByDigitalBouquet(DigitalBouquet $bouquet): ?Order
+    {
+        return $this->findOneBy(['digitalBouquet' => $bouquet], ['createdAt' => 'DESC']);
+    }
+
     public function findByExternalReference(string $externalReference): ?Order
     {
         return $this->findOneBy(['externalReference' => $externalReference]);
@@ -49,6 +55,7 @@ final class OrderRepository extends ServiceEntityRepository
             ->leftJoin('o.tribute', 't')
             ->leftJoin('o.album', 'a')
             ->leftJoin('o.coupleMap', 'm')
+            ->leftJoin('o.digitalBouquet', 'b')
             ->innerJoin('o.productPrice', 'pp')
             ->andWhere('o.id = :id')
             ->andWhere('o.user = :userId')

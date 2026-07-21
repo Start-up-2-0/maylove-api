@@ -7,6 +7,7 @@ namespace App\Infrastructure\Persistence\Entity\Billing;
 use App\Domain\Billing\OrderStatus;
 use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\CoupleMap;
+use App\Infrastructure\Persistence\Entity\DigitalBouquet;
 use App\Infrastructure\Persistence\Entity\Tribute;
 use App\Infrastructure\Persistence\Entity\User;
 use Doctrine\DBAL\Types\Types;
@@ -18,6 +19,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\UniqueConstraint(name: 'uniq_orders_tribute', columns: ['tribute_id'])]
 #[ORM\UniqueConstraint(name: 'uniq_orders_album', columns: ['album_id'])]
 #[ORM\UniqueConstraint(name: 'uniq_orders_couple_map', columns: ['couple_map_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_orders_digital_bouquet', columns: ['digital_bouquet_id'])]
 #[ORM\HasLifecycleCallbacks]
 class Order
 {
@@ -40,6 +42,10 @@ class Order
     #[ORM\ManyToOne(targetEntity: CoupleMap::class)]
     #[ORM\JoinColumn(name: 'couple_map_id', referencedColumnName: 'id', nullable: true)]
     private ?CoupleMap $coupleMap = null;
+
+    #[ORM\ManyToOne(targetEntity: DigitalBouquet::class)]
+    #[ORM\JoinColumn(name: 'digital_bouquet_id', referencedColumnName: 'id', nullable: true)]
+    private ?DigitalBouquet $digitalBouquet = null;
 
     #[ORM\ManyToOne(targetEntity: ProductPrice::class)]
     #[ORM\JoinColumn(name: 'product_price_id', referencedColumnName: 'id', nullable: false)]
@@ -89,8 +95,12 @@ class Order
         ?Tribute $tribute = null,
         ?Album $album = null,
         ?CoupleMap $coupleMap = null,
+        ?DigitalBouquet $digitalBouquet = null,
     ) {
-        $refCount = ($tribute !== null ? 1 : 0) + ($album !== null ? 1 : 0) + ($coupleMap !== null ? 1 : 0);
+        $refCount = ($tribute !== null ? 1 : 0)
+            + ($album !== null ? 1 : 0)
+            + ($coupleMap !== null ? 1 : 0)
+            + ($digitalBouquet !== null ? 1 : 0);
         if ($refCount !== 1) {
             throw new \InvalidArgumentException('Order must reference exactly one product.');
         }
@@ -100,6 +110,7 @@ class Order
         $this->tribute = $tribute;
         $this->album = $album;
         $this->coupleMap = $coupleMap;
+        $this->digitalBouquet = $digitalBouquet;
         $this->productPrice = $productPrice;
         $this->amountCents = $amountCents;
         $this->externalReference = $externalReference !== '' ? $externalReference : 'order:'.(string) $this->id;
@@ -113,7 +124,7 @@ class Order
         ProductPrice $productPrice,
         int $amountCents,
     ): self {
-        return new self($user, $productPrice, $amountCents, '', $tribute, null, null);
+        return new self($user, $productPrice, $amountCents, '', $tribute, null, null, null);
     }
 
     public static function forAlbum(
@@ -122,7 +133,7 @@ class Order
         ProductPrice $productPrice,
         int $amountCents,
     ): self {
-        return new self($user, $productPrice, $amountCents, '', null, $album, null);
+        return new self($user, $productPrice, $amountCents, '', null, $album, null, null);
     }
 
     public static function forCoupleMap(
@@ -131,7 +142,16 @@ class Order
         ProductPrice $productPrice,
         int $amountCents,
     ): self {
-        return new self($user, $productPrice, $amountCents, '', null, null, $coupleMap);
+        return new self($user, $productPrice, $amountCents, '', null, null, $coupleMap, null);
+    }
+
+    public static function forDigitalBouquet(
+        User $user,
+        DigitalBouquet $digitalBouquet,
+        ProductPrice $productPrice,
+        int $amountCents,
+    ): self {
+        return new self($user, $productPrice, $amountCents, '', null, null, null, $digitalBouquet);
     }
 
     public function getId(): Uuid
@@ -157,6 +177,11 @@ class Order
     public function getCoupleMap(): ?CoupleMap
     {
         return $this->coupleMap;
+    }
+
+    public function getDigitalBouquet(): ?DigitalBouquet
+    {
+        return $this->digitalBouquet;
     }
 
     public function getProductPrice(): ProductPrice
