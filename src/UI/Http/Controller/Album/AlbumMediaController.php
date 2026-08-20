@@ -99,4 +99,36 @@ final class AlbumMediaController extends AbstractController
             return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
         }
     }
+
+    #[Route('/{mediaId}', name: 'update', methods: ['PATCH'])]
+    public function update(string $albumId, string $mediaId, Request $request, #[CurrentUser] ?MayLoveUser $user): JsonResponse
+    {
+        if ($user === null) {
+            return ApiResponse::error('Não autorizado.', 'UNAUTHORIZED', Response::HTTP_UNAUTHORIZED);
+        }
+
+        /** @var array<string, mixed> $payload */
+        $payload = json_decode($request->getContent(), true) ?? [];
+
+        try {
+            $album = $this->albumService->getOwned($albumId, $user->getUser());
+            return ApiResponse::success('Foto atualizada.', $this->mediaService->update($album, $mediaId, $payload));
+        } catch (AlbumException $exception) {
+            return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
+        }
+    }
+
+    #[Route('/{mediaId}/replace', name: 'replace', methods: ['POST'])]
+    public function replace(string $albumId, string $mediaId, Request $request, #[CurrentUser] ?MayLoveUser $user): JsonResponse
+    {
+        if ($user === null) return ApiResponse::error('Não autorizado.', 'UNAUTHORIZED', Response::HTTP_UNAUTHORIZED);
+        /** @var array{replacement_media_id?: string} $payload */
+        $payload = json_decode($request->getContent(), true) ?? [];
+        try {
+            $album = $this->albumService->getOwned($albumId, $user->getUser());
+            return ApiResponse::success('Foto substituída.', $this->mediaService->replace($album, $mediaId, (string) ($payload['replacement_media_id'] ?? '')));
+        } catch (AlbumException $exception) {
+            return ApiResponse::error($exception->getMessage(), $exception->getErrorCode(), $exception->getStatusCode());
+        }
+    }
 }

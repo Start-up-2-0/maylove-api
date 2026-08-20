@@ -13,6 +13,7 @@ use App\Infrastructure\Persistence\Entity\Album;
 use App\Infrastructure\Persistence\Entity\AlbumMedia;
 use App\Infrastructure\Persistence\Entity\User;
 use App\Infrastructure\Persistence\Repository\AlbumMediaRepository;
+use App\Infrastructure\Persistence\Repository\AlbumMemoryRepository;
 use App\Infrastructure\Persistence\Repository\AlbumRepository;
 use App\Infrastructure\Storage\StorageApiClient;
 
@@ -25,6 +26,7 @@ final class AlbumMediaService
         private readonly MediaPresignRateLimitService $rateLimitService,
         private readonly AlbumSerializer $serializer,
         private readonly MediaUploadPolicy $uploadPolicy,
+        private readonly AlbumMemoryRepository $memoryRepository,
     ) {
     }
 
@@ -60,7 +62,24 @@ final class AlbumMediaService
         }
 
         $this->assertMimeAndSize($mediaType, $mimeType, $sizeBytes);
-        $this->assertQuota($album, $mediaType);
+
+        $replacementMediaId = trim((string) ($payload['replacement_media_id'] ?? ''));
+        $isReplacement = false;
+        if ($replacementMediaId !== '') {
+            if ($mediaType !== AlbumMediaType::Photo || !UuidValue::isValid($replacementMediaId)) {
+                throw new AlbumException('Foto que será substituída não encontrada.', 'MEDIA_NOT_FOUND', 404);
+            }
+            $replacedMedia = $this->mediaRepository->findActiveByIdAndAlbum(
+                UuidValue::fromString($replacementMediaId),
+                $album,
+            );
+            if ($replacedMedia === null || $replacedMedia->getMediaType() !== AlbumMediaType::Photo) {
+                throw new AlbumException('Foto que será substituída não encontrada.', 'MEDIA_NOT_FOUND', 404);
+            }
+            $isReplacement = true;
+        }
+
+        $this->assertQuota($album, $mediaType, $isReplacement);
 
         $ticket = $this->storageApiClient->createUploadTicket([
             'context' => 'album',
@@ -159,6 +178,107 @@ final class AlbumMediaService
 
         $media->softDelete();
         $this->mediaRepository->save($media);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public function update(Album $album, string $mediaId, array $payload): array
+    {
+        $this->assertEditable($album);
+
+        if (!UuidValue::isValid($mediaId)) {
+            throw new AlbumException('Mídia não encontrada.', 'MEDIA_NOT_FOUND', 404);
+        }
+
+        $media = $this->mediaRepository->findActiveByIdAndAlbum(UuidValue::fromString($mediaId), $album);
+        if ($media === null || $media->getMediaType() !== AlbumMediaType::Photo) {
+            throw new AlbumException('Foto não encontrada.', 'MEDIA_NOT_FOUND', 404);
+        }
+
+        if (array_key_exists('title', $payload)) {
+            $title = is_string($payload['title']) ? trim($payload['title']) : null;
+            if ($title !== null && mb_strlen($title) > 200) {
+                throw new AlbumException('Título muito longo.', 'VALIDATION_ERROR', 422);
+            }
+            $media->setTitle($title === '' ? null : $title);
+        }
+        if (array_key_exists('caption', $payload)) {
+            $caption = is_string($payload['caption']) ? trim($payload['caption']) : null;
+            if ($caption !== null && mb_strlen($caption) > 1000) {
+                throw new AlbumException('Legenda muito longa.', 'VALIDATION_ERROR', 422);
+            }
+            $media->setCaption($caption === '' ? null : $caption);
+        }
+        if (array_key_exists('memory_date', $payload)) {
+            $date = is_string($payload['memory_date']) ? trim($payload['memory_date']) : null;
+            if ($date !== null && $date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                throw new AlbumException('Data inválida.', 'VALIDATION_ERROR', 422);
+            }
+            $media->setMemoryDate($date === '' ? null : $date);
+        }
+        if (array_key_exists('place_name', $payload)) {
+            $place = is_string($payload['place_name']) ? trim($payload['place_name']) : null;
+            if ($place !== null && mb_strlen($place) > 160) {
+                throw new AlbumException('Local muito longo.', 'VALIDATION_ERROR', 422);
+            }
+            $media->setPlaceName($place);
+        }
+
+        $this->mediaRepository->save($media);
+
+        return $this->serializer->serializeMedia($media, includeUrl: true);
+    }
+
+    /** @return array<string, mixed> */
+    public function replace(Album $album, string $mediaId, string $replacementMediaId): array
+    {
+        $this->assertEditable($album);
+        if (!UuidValue::isValid($mediaId) || !UuidValue::isValid($replacementMediaId) || $mediaId === $replacementMediaId) {
+            throw new AlbumException('Mídia de substituição inválida.', 'VALIDATION_ERROR', 422);
+        }
+
+        $old = $this->mediaRepository->findActiveByIdAndAlbum(UuidValue::fromString($mediaId), $album);
+        $replacement = $this->mediaRepository->findActiveByIdAndAlbum(UuidValue::fromString($replacementMediaId), $album);
+        if ($old === null || $replacement === null || $old->getMediaType() !== AlbumMediaType::Photo || $replacement->getMediaType() !== AlbumMediaType::Photo) {
+            throw new AlbumException('Foto não encontrada.', 'MEDIA_NOT_FOUND', 404);
+        }
+
+        $oldStorageId = $old->getStorageFileId();
+        $em = $this->mediaRepository->getEntityManager();
+        $em->wrapInTransaction(function () use ($album, $old, $replacement): void {
+            $replacement->setSortOrder($old->getSortOrder());
+            $replacement->setTitle($old->getTitle());
+            $replacement->setCaption($old->getCaption());
+            $replacement->setMemoryDate($old->getMemoryDate());
+            $replacement->setPlaceName($old->getPlaceName());
+
+            $config = $album->getBookConfig() ?? [];
+            if (($config['cover']['media_id'] ?? null) === (string) $old->getId()) {
+                $config['cover']['media_id'] = (string) $replacement->getId();
+                $album->setBookConfig($config);
+            }
+
+            foreach ($this->memoryRepository->findOrderedByAlbum($album) as $memory) {
+                $content = $memory->getContentJson() ?? [];
+                $ids = is_array($content['media_ids'] ?? null) ? $content['media_ids'] : [];
+                $content['media_ids'] = array_values(array_map(
+                    static fn (mixed $id): mixed => $id === (string) $old->getId() ? (string) $replacement->getId() : $id,
+                    $ids,
+                ));
+                $memory->setContentJson($content);
+            }
+
+            $old->softDelete();
+            $em->persist($replacement);
+            $em->persist($album);
+            $em->flush();
+        });
+
+        try { $this->storageApiClient->deleteFile($oldStorageId); } catch (\Throwable) {}
+
+        return $this->serializer->serializeMedia($replacement, includeUrl: true);
     }
 
     /**
@@ -287,9 +407,12 @@ final class AlbumMediaService
         }
     }
 
-    private function assertQuota(Album $album, AlbumMediaType $type): void
+    private function assertQuota(Album $album, AlbumMediaType $type, bool $isReplacement = false): void
     {
         if ($type === AlbumMediaType::Photo) {
+            if ($isReplacement) {
+                return;
+            }
             $count = $this->mediaRepository->countActiveByAlbumAndType($album, AlbumMediaType::Photo);
             if ($count >= MediaUploadPolicy::MAX_PHOTOS_PER_ALBUM) {
                 throw new AlbumException(
