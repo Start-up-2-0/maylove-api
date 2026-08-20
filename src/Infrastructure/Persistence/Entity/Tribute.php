@@ -82,6 +82,9 @@ class Tribute
     #[ORM\Column(name: 'views_count', type: Types::INTEGER, options: ['unsigned' => true, 'default' => 0])]
     private int $viewsCount = 0;
 
+    #[ORM\Column(name: 'shares_count', type: Types::INTEGER, options: ['unsigned' => true, 'default' => 0])]
+    private int $sharesCount = 0;
+
     #[ORM\Column(name: 'og_image_url', length: 500, nullable: true)]
     private ?string $ogImageUrl = null;
 
@@ -308,6 +311,11 @@ class Tribute
     public function getViewsCount(): int
     {
         return $this->viewsCount;
+    }
+
+    public function getSharesCount(): int
+    {
+        return $this->sharesCount;
     }
 
     public function getOgImageUrl(): ?string

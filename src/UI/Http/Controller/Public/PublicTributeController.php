@@ -7,6 +7,8 @@ namespace App\UI\Http\Controller\Public;
 use App\Application\Public\PublicTributeQueryService;
 use App\Application\Public\PublicTributeSerializer;
 use App\Application\Public\TributeViewService;
+use App\Application\Public\TributeShareService;
+use App\Infrastructure\Security\MayLoveUser;
 use App\UI\Http\ApiResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,7 +23,18 @@ final class PublicTributeController extends AbstractController
         private readonly PublicTributeQueryService $queryService,
         private readonly PublicTributeSerializer $serializer,
         private readonly TributeViewService $viewService,
+        private readonly TributeShareService $shareService,
     ) {
+    }
+
+    #[Route('/{slug}/share', name: 'share', methods: ['POST'])]
+    public function recordShare(string $slug, Request $request): Response
+    {
+        /** @var array{session_id?: string} $payload */
+        $payload = json_decode($request->getContent(), true) ?? [];
+        $this->shareService->record($slug, (string) ($payload['session_id'] ?? ''));
+
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 
     #[Route('/{slug}', name: 'show', methods: ['GET'])]
@@ -38,7 +51,16 @@ final class PublicTributeController extends AbstractController
         /** @var array{session_id?: string} $payload */
         $payload = json_decode($request->getContent(), true) ?? [];
 
-        $this->viewService->recordView($slug, (string) ($payload['session_id'] ?? ''));
+        $securityUser = $this->getUser();
+        $viewerUserId = $securityUser instanceof MayLoveUser
+            ? $securityUser->getUserIdentifier()
+            : null;
+
+        $this->viewService->recordView(
+            $slug,
+            (string) ($payload['session_id'] ?? ''),
+            $viewerUserId,
+        );
 
         return new Response(null, Response::HTTP_NO_CONTENT);
     }

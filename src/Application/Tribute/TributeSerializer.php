@@ -144,6 +144,9 @@ final class TributeSerializer
         return [
             'status' => $tribute->getStatus()->value,
             'views_count' => $tribute->getViewsCount(),
+            'unique_visitors' => $this->tributeViewRepository->countUniqueSessionsForTribute($tribute),
+            'shares_count' => $tribute->getSharesCount(),
+            'daily_views' => $this->tributeViewRepository->getDailyViewsForTribute($tribute),
             'first_viewed_at' => $viewBounds['first_viewed_at']?->format(\DateTimeInterface::ATOM),
             'last_viewed_at' => $viewBounds['last_viewed_at']?->format(\DateTimeInterface::ATOM),
             'photos_count' => $photos,

@@ -19,19 +19,23 @@ final class TributeViewService
     ) {
     }
 
-    public function recordView(string $slug, string $sessionId): void
+    public function recordView(string $slug, string $sessionId, ?string $viewerUserId = null): void
     {
         $sessionId = trim($sessionId);
         if ($sessionId === '' || !Uuid::isValid($sessionId)) {
             throw new TributeException('session_id inválido.', 'VALIDATION_ERROR', 400);
         }
 
-        if (!$this->rateLimitService->canRecordView($slug, $sessionId)) {
+        $tribute = $this->queryService->getPublishedBySlug($slug);
+        $tributeId = (string) $tribute->getId();
+
+        if ($viewerUserId !== null && $viewerUserId === (string) $tribute->getUser()->getId()) {
             return;
         }
 
-        $tribute = $this->queryService->getPublishedBySlug($slug);
-        $tributeId = (string) $tribute->getId();
+        if (!$this->rateLimitService->canRecordView($slug, $sessionId)) {
+            return;
+        }
 
         if (!$this->debounceService->shouldRecord($tributeId, $sessionId)) {
             return;

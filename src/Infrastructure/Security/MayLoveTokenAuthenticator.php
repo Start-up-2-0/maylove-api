@@ -29,7 +29,10 @@ final class MayLoveTokenAuthenticator extends AbstractAuthenticator implements A
     public function supports(Request $request): ?bool
     {
         if ($this->isPublicPath($request->getPathInfo())) {
-            return false;
+            // Rotas públicas continuam anônimas, mas autenticamos quando o cliente
+            // envia voluntariamente o token. Isso permite aplicar regras como não
+            // contabilizar a visualização do próprio autor sem exigir login.
+            return $request->headers->has($this->tokenHeaderName);
         }
 
         return str_starts_with($request->getPathInfo(), '/api/v1');

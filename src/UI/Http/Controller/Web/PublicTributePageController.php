@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('', name: 'web_')]
 final class PublicTributePageController extends AbstractController
@@ -20,6 +21,7 @@ final class PublicTributePageController extends AbstractController
         private readonly PublicTributeQueryService $queryService,
         private readonly PublicTributeSerializer $serializer,
         private readonly PublicTributeHtmlRenderer $htmlRenderer,
+        private readonly HttpClientInterface $httpClient,
         private readonly string $frontendUrl,
     ) {
     }
@@ -41,7 +43,17 @@ final class PublicTributePageController extends AbstractController
         $serialized = $this->serializer->serialize($tribute);
         $ogImageUrl = isset($serialized['og_image_url']) ? (string) $serialized['og_image_url'] : null;
 
-        $html = $this->htmlRenderer->render($tribute, $canonicalUrl, $this->frontendUrl, $ogImageUrl);
+        $frontendHtml = null;
+        try {
+            $frontendHtml = $this->httpClient->request('GET', rtrim($this->frontendUrl, '/').'/', [
+                'timeout' => 3,
+                'headers' => ['Accept' => 'text/html'],
+            ])->getContent();
+        } catch (\Throwable) {
+            // Em desenvolvimento, o fallback continua apontando para o entrypoint do Vite.
+        }
+
+        $html = $this->htmlRenderer->render($tribute, $canonicalUrl, $this->frontendUrl, $ogImageUrl, $frontendHtml);
 
         return new Response($html, Response::HTTP_OK, [
             'Content-Type' => 'text/html; charset=UTF-8',

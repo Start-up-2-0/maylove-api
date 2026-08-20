@@ -8,7 +8,7 @@ use App\Infrastructure\Persistence\Entity\Tribute;
 
 final class PublicTributeHtmlRenderer
 {
-    public function render(Tribute $tribute, string $canonicalUrl, string $frontendUrl, ?string $ogImageUrl): string
+    public function render(Tribute $tribute, string $canonicalUrl, string $frontendUrl, ?string $ogImageUrl, ?string $frontendHtml = null): string
     {
         $title = $this->escape($tribute->getTitle() ?: $tribute->getHonoreeName() ?: 'MayLov');
         $description = $this->escape($this->buildDescription($tribute));
@@ -21,12 +21,7 @@ final class PublicTributeHtmlRenderer
             ? "<meta property=\"og:image\" content=\"{$ogImage}\">\n    <meta name=\"twitter:image\" content=\"{$ogImage}\">"
             : '';
 
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        $metadata = <<<HTML
     <title>{$title} | MayLov</title>
     <meta name="description" content="{$description}">
     <link rel="canonical" href="{$canonical}">
@@ -38,6 +33,25 @@ final class PublicTributeHtmlRenderer
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{$title}">
     <meta name="twitter:description" content="{$description}">
+HTML;
+
+        if ($frontendHtml !== null && str_contains($frontendHtml, '</head>')) {
+            $cleanHtml = preg_replace([
+                '~<title\b[^>]*>.*?</title>~is',
+                '~<meta\s+(?:name|property)=["\'](?:description|og:[^"\']+|twitter:[^"\']+)["\'][^>]*>~i',
+                '~<link\s+rel=["\']canonical["\'][^>]*>~i',
+            ], '', $frontendHtml) ?? $frontendHtml;
+
+            return str_replace('</head>', $metadata."\n</head>", $cleanHtml);
+        }
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{$metadata}
 </head>
 <body>
     <div id="app" data-slug="{$slug}">Carregando homenagem...</div>

@@ -84,6 +84,17 @@ final class TributeRepository extends ServiceEntityRepository
             ->execute();
     }
 
+    public function incrementSharesCount(Uuid $id): void
+    {
+        $this->createQueryBuilder('t')
+            ->update()
+            ->set('t.sharesCount', 't.sharesCount + 1')
+            ->where('t.id = :id')
+            ->setParameter('id', $id, 'uuid')
+            ->getQuery()
+            ->execute();
+    }
+
     public function existsBySlug(string $slug, ?Uuid $excludeId = null): bool
     {
         $qb = $this->createQueryBuilder('t')
