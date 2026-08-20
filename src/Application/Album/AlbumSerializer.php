@@ -65,6 +65,7 @@ final class AlbumSerializer
             : null;
         $data['book_config'] = $album->getBookConfig();
         $data['book_pages'] = $album->getBookPages();
+        $data['content_json'] = $album->getContentJson();
         $data['media_urls_expire_at'] = (new \DateTimeImmutable())
             ->modify(sprintf('+%d seconds', self::MEDIA_URL_TTL - self::MEDIA_URL_TTL_MARGIN_SECONDS))
             ->format(\DateTimeInterface::ATOM);

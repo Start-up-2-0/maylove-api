@@ -67,6 +67,10 @@ class Album
     #[ORM\Column(name: 'book_pages', type: Types::JSON, nullable: true)]
     private ?array $bookPages = null;
 
+    /** @var array<string, mixed>|null */
+    #[ORM\Column(name: 'content_json', type: Types::JSON, nullable: true)]
+    private ?array $contentJson = null;
+
     #[ORM\Column(name: 'music_media_id', type: 'uuid', nullable: true)]
     private ?Uuid $musicMediaId = null;
 
@@ -264,6 +268,19 @@ class Album
     public function setBookPages(?array $bookPages): void
     {
         $this->bookPages = $bookPages;
+        $this->touch();
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getContentJson(): ?array
+    {
+        return $this->contentJson;
+    }
+
+    /** @param array<string, mixed>|null $contentJson */
+    public function setContentJson(?array $contentJson): void
+    {
+        $this->contentJson = $contentJson;
         $this->touch();
     }
 

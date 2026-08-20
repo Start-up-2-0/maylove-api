@@ -196,6 +196,23 @@ final class AlbumService
             }
         }
 
+        if (array_key_exists('content_json', $payload)) {
+            if ($payload['content_json'] === null) {
+                $album->setContentJson(null);
+            } elseif (is_array($payload['content_json'])) {
+                /** @var array<string, mixed> $contentJson */
+                $contentJson = $payload['content_json'];
+                $this->assertMaxDepth($contentJson, 6);
+                $encoded = json_encode($contentJson);
+                if ($encoded === false || strlen($encoded) > 65_536) {
+                    throw new AlbumException('content_json excede o tamanho máximo permitido.', 'PAYLOAD_TOO_LARGE', 413);
+                }
+                $album->setContentJson($contentJson);
+            } else {
+                throw new AlbumException('content_json inválido.', 'INVALID_CONTENT_JSON', 422);
+            }
+        }
+
         if (isset($payload['pages']) && is_array($payload['pages'])) {
             $this->syncPageMetadata($album, $payload['pages']);
         }
