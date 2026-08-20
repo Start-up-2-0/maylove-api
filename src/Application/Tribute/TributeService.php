@@ -29,6 +29,7 @@ final class TributeService
         private readonly TributeSlugGenerator $slugGenerator,
         private readonly PendingOrderInvalidationService $pendingOrderInvalidation,
         private readonly PresentationSchemaProvider $schemaProvider,
+        private readonly TributeProposalContentNormalizer $proposalContentNormalizer,
         private readonly UserRepository $userRepository,
         private readonly bool $emailVerificationEnabled,
     ) {
@@ -316,20 +317,7 @@ final class TributeService
             }
         }
 
-        // Textos específicos de layout (ex.: pergunta do pedido interativo).
-        foreach (['question', 'celebration'] as $key) {
-            if (!array_key_exists($key, $incoming)) {
-                continue;
-            }
-            $value = $incoming[$key];
-            if ($value === null || $value === '') {
-                unset($content[$key]);
-            } elseif (is_string($value)) {
-                $content[$key] = mb_substr(trim($value), 0, 300);
-            } else {
-                throw new TributeException(sprintf('Valor inválido para %s.', $key), 'VALIDATION_ERROR', 400);
-            }
-        }
+        $content = $this->proposalContentNormalizer->normalize($content, $incoming);
 
         // Ordem/ativação das seções (lista de ids). [] limpa.
         if (array_key_exists('section_order', $incoming)) {

@@ -13,3 +13,8 @@
 /.env.dev
 /.env.staging
 /.env.production
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###

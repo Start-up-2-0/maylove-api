@@ -19,6 +19,7 @@ final class PublicTributeSerializer
         private readonly TributeMediaRepository $mediaRepository,
         private readonly StorageApiClient $storageApiClient,
         private readonly TributeMusicSerializer $tributeMusicSerializer,
+        private readonly PublicTributeContentFilter $contentFilter,
     ) {
     }
 
@@ -42,7 +43,7 @@ final class PublicTributeSerializer
             'closing_message' => $tribute->getClosingMessage(),
             'special_date' => $tribute->getSpecialDate()?->format('Y-m-d'),
             'color_primary' => $tribute->getColorPrimary(),
-            'content_json' => $this->filterPublicContentJson($tribute->getContentJson()),
+            'content_json' => $this->contentFilter->filter($tribute->getContentJson()),
             'og_image_url' => $this->resolveOgImageUrl($tribute, $media),
             'published_at' => $tribute->getPublishedAt()?->format(\DateTimeInterface::ATOM),
             'views_count' => $tribute->getViewsCount(),
@@ -80,34 +81,6 @@ final class PublicTributeSerializer
             'url' => $url,
             'url_thumbnail' => $media->getUrlThumbnail() ?? $url,
         ];
-    }
-
-    /**
-     * Retorna apenas as chaves de content_json seguras para exposição pública.
-     * Evita que campos internos adicionados no futuro vazem automaticamente.
-     *
-     * @param array<string, mixed>|null $contentJson
-     * @return array<string, mixed>
-     */
-    private function filterPublicContentJson(?array $contentJson): array
-    {
-        if ($contentJson === null) {
-            return [];
-        }
-
-        $allowed = [
-            'style_id', 'presentation', 'font', 'background', 'effects',
-            'animation_speed', 'entrance', 'photo_style', 'text_style',
-            'question', 'celebration', 'section_order',
-            'special_date_config', 'timeline', 'messages', 'event_info',
-            'sender_name', 'signature', 'video_url', 'modules',
-            'music_autoplay', 'music_loop', 'music_start_seconds',
-            'music_end_seconds', 'music_duration_seconds',
-            'include_opening_message', 'include_closing_message',
-            'romance_theme_id', 'retrospective_palette_id', 'romance_experience_id',
-        ];
-
-        return array_intersect_key($contentJson, array_flip($allowed));
     }
 
     /**
